@@ -1,19 +1,11 @@
 {
-  "manifest_version": 3,
-  "name": "Mon Extension Chrome",
-  "version": "1.0.0",
-  "description": "Une extension simple avec HTML, Tailwind CSS et JS.",
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/icon.jpg",
-      "32": "icons/icon.jpg",
-      "48": "icons/icon.jpg",
-      "128": "icons/icon.jpg"
+    "manifest_version": 3,
+    "name": "Analyse des mots",
+    "version": "1.0",
+    "description": "Extension qui analyse les mots sur une page.",
+    "permissions": ["activeTab", "scripting"],
+    "action": {
+      "default_popup": "popup.html"
     }
-  },
-  "permissions": [],
-  "background": {
-    "service_worker": "background.js"
   }
-}
+  
