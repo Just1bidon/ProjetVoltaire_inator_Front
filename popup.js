@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Exécuter le script dans l'onglet actif pour mettre en évidence les éléments
+    // Exécuter le script dans l'onglet actif
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      // Étape 1 : Mise en évidence et récupération des indices des mots fautifs
       chrome.scripting.executeScript(
         {
           target: { tabId: tabs[0].id },
@@ -31,38 +32,39 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
               document.getElementById('words').textContent = 'Aucun mot concerné.';
             }
+  
+            // Étape 2 : Récupérer les mots corrigés aux mêmes indices
+            chrome.scripting.executeScript(
+              {
+                target: { tabId: tabs[0].id },
+                func: fetchCorrectedWords, // Nouvelle fonction pour récupérer les mots corrigés
+                args: [data.potentialErrorIndices], // Passer les indices des mots fautifs
+              },
+              function (correctionResults) {
+                const correctedData =
+                  correctionResults && correctionResults[0] && correctionResults[0].result;
+  
+                if (correctedData && correctedData.correctedWords) {
+                  // Afficher les corrections dans le popup
+                  const correctionsDiv = document.getElementById('corrections');
+                  correctionsDiv.innerHTML = ''; // Vider le contenu précédent
+  
+                  correctedData.correctedWords.forEach((correction, index) => {
+                    const correctionText = document.createElement('div');
+                    correctionText.textContent = `Indice ${correction.index} : "${correction.original}" corrigé en "${correction.corrected}"`;
+                    correctionsDiv.appendChild(correctionText);
+                  });
+                }
+              }
+            );
           } else {
             document.getElementById('result').textContent = 'Aucun résultat trouvé.';
           }
         }
       );
-  
-      // Vérifier si le pop-up de correction est actif et récupérer les phrases
-      chrome.scripting.executeScript(
-        {
-          target: { tabId: tabs[0].id },
-          func: checkCorrectionPopupAndFetchPhrases, // Nouvelle fonction exécutée dans la page
-        },
-        function (results) {
-          const result = results && results[0] && results[0].result;
-  
-          if (result && result.isActive) {
-            // Afficher la phrase originale
-            const originalDiv = document.getElementById('original');
-            originalDiv.textContent = 'Phrase originale : ' + result.originalPhrase.join(' ');
-  
-            // Afficher la phrase corrigée
-            const correctedDiv = document.getElementById('corrected');
-            correctedDiv.textContent = 'Phrase corrigée : ' + result.correctedPhrase.join(' ');
-          } else {
-            // Indiquer que le pop-up de correction n'est pas actif
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = "Le pop-up de correction n'est pas actif.";
-          }
-        }
-      );
     });
   });
+  
 
   
 // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -183,11 +185,58 @@ function checkCorrectionPopupStatus() {
 
 function checkCorrectionPopupAndFetchPhrases() {
     const correctionPopup = document.querySelector(
+        'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
+    );
+    
+    if (!correctionPopup) {
+        return { isActive: false };
+    }
+    
+    // Récupérer la phrase corrigée
+    const correctedPhraseDiv = correctionPopup.querySelector(
+        'div.css-175oi2r.r-obd0qt.r-18u37iz.r-1w6e6rj.r-bztko3'
+    );
+    
+    const correctedPhrase = correctedPhraseDiv
+    ? Array.from(
+        correctedPhraseDiv.querySelectorAll(
+            'div[style*="font-size: 16px"][style*="font-family: Montserrat-Regular"][style*="color: rgb(22, 27, 39);"]'
+        )
+    ).map((el) => el.textContent.trim())
+    : [];
+    
+    // Récupérer la phrase originale
+    const parentDivs = document.querySelectorAll(
+        'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
+    );
+    
+    const originalPhrase = [];
+    parentDivs.forEach((parent) => {
+        const childElements = parent.querySelectorAll('.css-146c3p1.r-184en5c');
+        childElements.forEach((el) => {
+            originalPhrase.push(el.textContent.trim());
+        });
+    });
+    
+    return {
+        isActive: true,
+        originalPhrase: originalPhrase,
+        correctedPhrase: correctedPhrase,
+    };
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+function fetchCorrectedWords(indices) {
+    const correctionPopup = document.querySelector(
       'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
     );
   
     if (!correctionPopup) {
-      return { isActive: false };
+      return { correctedWords: [] };
     }
   
     // Récupérer la phrase corrigée
@@ -195,7 +244,7 @@ function checkCorrectionPopupAndFetchPhrases() {
       'div.css-175oi2r.r-obd0qt.r-18u37iz.r-1w6e6rj.r-bztko3'
     );
   
-    const correctedPhrase = correctedPhraseDiv
+    const correctedWords = correctedPhraseDiv
       ? Array.from(
           correctedPhraseDiv.querySelectorAll(
             'div[style*="font-size: 16px"][style*="font-family: Montserrat-Regular"][style*="color: rgb(22, 27, 39);"]'
@@ -208,18 +257,24 @@ function checkCorrectionPopupAndFetchPhrases() {
       'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
     );
   
-    const originalPhrase = [];
+    const originalWords = [];
     parentDivs.forEach((parent) => {
       const childElements = parent.querySelectorAll('.css-146c3p1.r-184en5c');
       childElements.forEach((el) => {
-        originalPhrase.push(el.textContent.trim());
+        originalWords.push(el.textContent.trim());
       });
     });
   
-    return {
-      isActive: true,
-      originalPhrase: originalPhrase,
-      correctedPhrase: correctedPhrase,
-    };
+    // Ajuster les indices (indice - 1) pour corriger le décalage
+    const corrections = indices.map((index) => {
+      const adjustedIndex = index; // Ajustement ici
+      return {
+        index: index,
+        original: originalWords[adjustedIndex -1 ] || '',
+        corrected: correctedWords[adjustedIndex] || '',
+      };
+    });
+  
+    return { correctedWords: corrections };
   }
   
