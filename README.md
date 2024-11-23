@@ -8,8 +8,6 @@ Cette extension Chrome permet d'identifier les mots potentiellement fautifs dans
 1. Clonez ce dépôt Git en local en utilisant la commande suivante :
     
     ```bash
-    bash
-    Copier le code
     git clone -b dev https://github.com/Just1bidon/ProjetVoltaire_inator_Front.git
     
     ```
