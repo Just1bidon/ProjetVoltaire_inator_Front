@@ -37,26 +37,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       );
   
-      // Vérifier si le pop-up de correction est actif
+      // Vérifier si le pop-up de correction est actif et récupérer les phrases
       chrome.scripting.executeScript(
         {
           target: { tabId: tabs[0].id },
-          func: isCorrectionPopupActive, // Fonction exécutée dans la page
+          func: checkCorrectionPopupAndFetchPhrases, // Nouvelle fonction exécutée dans la page
         },
         function (results) {
-          const isActive = results && results[0] && results[0].result;
+          const result = results && results[0] && results[0].result;
   
-          // Afficher le statut du pop-up de correction dans le popup
-          const correctionStatusDiv = document.createElement('div');
-          correctionStatusDiv.textContent = isActive
-            ? "Le pop-up de correction est actif."
-            : "Le pop-up de correction n'est pas actif.";
-          document.body.appendChild(correctionStatusDiv);
+          if (result && result.isActive) {
+            // Afficher la phrase originale
+            const originalDiv = document.getElementById('original');
+            originalDiv.textContent = 'Phrase originale : ' + result.originalPhrase.join(' ');
+  
+            // Afficher la phrase corrigée
+            const correctedDiv = document.getElementById('corrected');
+            correctedDiv.textContent = 'Phrase corrigée : ' + result.correctedPhrase.join(' ');
+          } else {
+            // Indiquer que le pop-up de correction n'est pas actif
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = "Le pop-up de correction n'est pas actif.";
+          }
         }
       );
     });
   });
-  
+
   
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,8 +143,7 @@ function highlightElements() {
       potentialErrorIndices,
       potentialErrorWords,
     };
-  }
-  
+  }  
   
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -158,13 +164,62 @@ function isCorrectionPopupActive() {
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-  function checkCorrectionPopupStatus() {
+function checkCorrectionPopupStatus() {
     const popupStatus = isCorrectionPopupActive()
-      ? "Le pop-up de correction est actif."
-      : "Le pop-up de correction n'est pas actif.";
+    ? "Le pop-up de correction est actif."
+    : "Le pop-up de correction n'est pas actif.";
     
     // Afficher l'information dans le popup
     const resultDiv = document.getElementById('correctionPopup');
     resultDiv.textContent = popupStatus;
+}
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function checkCorrectionPopupAndFetchPhrases() {
+    const correctionPopup = document.querySelector(
+      'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
+    );
+  
+    if (!correctionPopup) {
+      return { isActive: false };
+    }
+  
+    // Récupérer la phrase corrigée
+    const correctedPhraseDiv = correctionPopup.querySelector(
+      'div.css-175oi2r.r-obd0qt.r-18u37iz.r-1w6e6rj.r-bztko3'
+    );
+  
+    const correctedPhrase = correctedPhraseDiv
+      ? Array.from(
+          correctedPhraseDiv.querySelectorAll(
+            'div[style*="font-size: 16px"][style*="font-family: Montserrat-Regular"][style*="color: rgb(22, 27, 39);"]'
+          )
+        ).map((el) => el.textContent.trim())
+      : [];
+  
+    // Récupérer la phrase originale
+    const parentDivs = document.querySelectorAll(
+      'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
+    );
+  
+    const originalPhrase = [];
+    parentDivs.forEach((parent) => {
+      const childElements = parent.querySelectorAll('.css-146c3p1.r-184en5c');
+      childElements.forEach((el) => {
+        originalPhrase.push(el.textContent.trim());
+      });
+    });
+  
+    return {
+      isActive: true,
+      originalPhrase: originalPhrase,
+      correctedPhrase: correctedPhrase,
+    };
   }
   
