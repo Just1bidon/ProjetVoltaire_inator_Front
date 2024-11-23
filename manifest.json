@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Une extension simple avec HTML, Tailwind CSS et JS.",
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "src/popup.html",
     "default_icon": {
       "16": "icons/icon.jpg",
       "32": "icons/icon.jpg",
