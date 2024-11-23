@@ -26,8 +26,9 @@ document.getElementById('countButton').addEventListener('click', function () {
   
             // Étape 4 : Afficher les mots dans le popup
             if (data.potentialErrorWords && data.potentialErrorWords.length > 0) {
+              var wordsText = data.potentialErrorWords.join(', ');
               document.getElementById('words').textContent =
-                'Mots concernés : ' + data.potentialErrorWords.join(', ');
+                'Mot(s) à corriger : ' + wordsText;
             } else {
               document.getElementById('words').textContent = 'Aucun mot concerné.';
             }
@@ -38,6 +39,7 @@ document.getElementById('countButton').addEventListener('click', function () {
       );
     });
   });
+  
   
   
   function highlightElements() {

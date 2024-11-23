@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Compteur et mise en évidence des éléments</title>
+  <title>Analyse des mots</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,17 +13,17 @@
       padding: 10px 20px;
       font-size: 16px;
     }
-    #result, #sentence {
+    #result, #errors, #words {
       margin-top: 10px;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <button id="countButton">Compter les éléments</button>
+  <button id="countButton">Analyser</button>
   <div id="result"></div>
-  <div id="sentence"></div>
   <div id="errors"></div>
+  <div id="words"></div>
 
   <script src="popup.js"></script>
 </body>
