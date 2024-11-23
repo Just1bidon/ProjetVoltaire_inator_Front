@@ -1,5 +1,6 @@
-document.getElementById('countButton').addEventListener('click', function () {
-    // Étape 1 : Exécuter le script dans l'onglet actif
+// Fonction qui sera exécutée lorsque le popup est chargé
+document.addEventListener('DOMContentLoaded', function () {
+    // Exécuter le script dans l'onglet actif
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.scripting.executeScript(
         {
@@ -11,11 +12,11 @@ document.getElementById('countButton').addEventListener('click', function () {
           if (results && results[0] && results[0].result) {
             var data = results[0].result;
   
-            // Étape 2 : Afficher le nombre total d'éléments mis en évidence
+            // Afficher le nombre total d'éléments mis en évidence
             document.getElementById('result').textContent =
               "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
   
-            // Étape 3 : Afficher les indices dans le popup
+            // Afficher les indices dans le popup
             if (data.potentialErrorIndices && data.potentialErrorIndices.length > 0) {
               var indicesText = data.potentialErrorIndices.join(', ');
               document.getElementById('errors').textContent =
@@ -24,7 +25,7 @@ document.getElementById('countButton').addEventListener('click', function () {
               document.getElementById('errors').textContent = 'Aucun indice concerné.';
             }
   
-            // Étape 4 : Afficher les mots dans le popup
+            // Afficher les mots dans le popup
             if (data.potentialErrorWords && data.potentialErrorWords.length > 0) {
               var wordsText = data.potentialErrorWords.join(', ');
               document.getElementById('words').textContent =
