@@ -15,16 +15,21 @@ document.getElementById('countButton').addEventListener('click', function () {
             document.getElementById('result').textContent =
               "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
   
-            // Étape 3 : Afficher la phrase dans le popup
-            document.getElementById('sentence').textContent = 'Phrase : ' + data.sentence;
-  
-            // Étape 4 : Afficher les indices des divs concernées
+            // Étape 3 : Afficher les indices dans le popup
             if (data.potentialErrorIndices && data.potentialErrorIndices.length > 0) {
               var indicesText = data.potentialErrorIndices.join(', ');
               document.getElementById('errors').textContent =
-                'Indices des divs concernées : ' + indicesText;
+                'Indices concernés : ' + indicesText;
             } else {
-              document.getElementById('errors').textContent = 'Aucune div concernée.';
+              document.getElementById('errors').textContent = 'Aucun indice concerné.';
+            }
+  
+            // Étape 4 : Afficher les mots dans le popup
+            if (data.potentialErrorWords && data.potentialErrorWords.length > 0) {
+              document.getElementById('words').textContent =
+                'Mots concernés : ' + data.potentialErrorWords.join(', ');
+            } else {
+              document.getElementById('words').textContent = 'Aucun mot concerné.';
             }
           } else {
             document.getElementById('result').textContent = 'Aucun résultat trouvé.';
@@ -85,38 +90,44 @@ document.getElementById('countButton').addEventListener('click', function () {
       });
     });
   
-    // Étape 4 : Assembler la phrase
-    var words = elementsInOrder.filter(e => e.isWord).map(e => e.text);
-    var sentence = words.join(' ');
-  
-    // Étape 5 : Déterminer les indices des mots potentiellement fautifs
+    // Étape 4 : Déterminer les indices des mots potentiellement fautifs
     var potentialErrorIndices = [];
-  
     if (highlightedIndices.length === 1) {
       var index = highlightedIndices[0];
   
       // Indices des éléments juste avant et après
-      var indicesToReturn = [];
       if (index > 0) {
-        indicesToReturn.push(index - 1);
+        potentialErrorIndices.push(index - 1);
       }
-      indicesToReturn.push(index);
       if (index < elementsInOrder.length - 1) {
-        indicesToReturn.push(index + 1);
+        potentialErrorIndices.push(index + 1);
       }
-  
-      potentialErrorIndices = indicesToReturn;
     } else if (highlightedIndices.length === 2) {
-      // Retourner les indices des deux divs mises en évidence
-      potentialErrorIndices = highlightedIndices;
+      // Indices entre les deux `divs` mises en évidence
+      var index1 = highlightedIndices[0];
+      var index2 = highlightedIndices[1];
+  
+      // Ajouter tous les indices entre index1 et index2
+      for (var i = index1 + 1; i < index2; i++) {
+        potentialErrorIndices.push(i);
+      }
     }
+  
+    // Étape 5 : Mettre en évidence les mots correspondants
+    var potentialErrorWords = [];
+    potentialErrorIndices.forEach(function(index) {
+      var item = elementsInOrder[index];
+      if (item && item.isWord) {
+        item.element.style.backgroundColor = 'red';
+        potentialErrorWords.push(item.text);
+      }
+    });
   
     // Retourner les informations nécessaires
     return {
       totalOccurrences: totalOccurrences,
-      sentence: sentence,
       potentialErrorIndices: potentialErrorIndices,
-      elementsInOrder: elementsInOrder // Nous renvoyons cette liste pour utilisation ultérieure
+      potentialErrorWords: potentialErrorWords
     };
   }
   
