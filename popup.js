@@ -116,27 +116,22 @@ function fetchCorrectedWordsFromIndices(indices, tabs) {
         correctedPhraseDiv.textContent = `Phrase corrigée : "${correctedData.correctedPhrase}"`;
         debugDiv.appendChild(correctedPhraseDiv);
 
-        // Récupérer le mot faux depuis la fonction highlightElements
-        chrome.scripting.executeScript(
-          {
-            target: { tabId: tabs[0].id },
-            func: getPotentialErrorWords,
-          },
-          function (errorResults) {
-            const errorData =
-              errorResults && errorResults[0] && errorResults[0].result;
+        // Afficher les mots corrigés aux mêmes indices
+        const wordsAtIndicesDiv = document.createElement("div");
+        wordsAtIndicesDiv.textContent = `Mots corrigés aux indices donnés : ${correctedData.wordsAtIndices.join(
+          ", "
+        )}`;
+        debugDiv.appendChild(wordsAtIndicesDiv);
 
-            const motFaux = errorData && errorData.potentialErrorWords.join(" ") || "";
-            const motCorrige = correctedData.correctedWords.join(" ") || "";
+        // Envoyer à l'API le premier mot faux et corrigé
+        const motFaux = correctedData.wordsAtIndices[0] || "";
+        const motCorrige = correctedData.correctedWords[0] || "";
 
-            // Envoyer à l'API
-            sendPhraseToAPI(
-              correctedData.originalPhrase,
-              correctedData.correctedWords.length > 0,
-              motFaux,
-              motCorrige
-            );
-          }
+        sendPhraseToAPI(
+          correctedData.originalPhrase,
+          correctedData.correctedWords.length > 0,
+          motFaux,
+          motCorrige
         );
       } else {
         correctionsDiv.textContent = "Il n'y avait pas de faute.";
@@ -262,6 +257,7 @@ function highlightElements() {
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
+
 function fetchCorrectedWords(indices) {
   const correctionPopup = document.querySelector(
     'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
@@ -272,6 +268,7 @@ function fetchCorrectedWords(indices) {
       correctedWords: [],
       originalPhrase: "",
       correctedPhrase: "",
+      wordsAtIndices: [],
     };
   }
 
@@ -285,6 +282,7 @@ function fetchCorrectedWords(indices) {
       correctedWords: [],
       originalPhrase: "",
       correctedPhrase: "",
+      wordsAtIndices: [],
     };
   }
 
@@ -304,6 +302,7 @@ function fetchCorrectedWords(indices) {
   );
 
   let correctedWordsResult = [];
+  const correctedWordsAtIndices = [];
 
   if (correctionMarkers.length === 2) {
     // Deux marqueurs, on garde la logique actuelle
@@ -318,7 +317,6 @@ function fetchCorrectedWords(indices) {
     const markerIndex = correctedElements.indexOf(correctionMarkers[0]);
     const totalWords = correctedElements.length;
 
-    // Si l'indice du marqueur est inférieur ou égal à la moitié de la phrase
     if (markerIndex <= Math.floor(totalWords / 2)) {
       // Div au "début", on prend tout le contenu avant la div
       correctedWordsResult = correctedWords.slice(0, markerIndex);
@@ -327,6 +325,16 @@ function fetchCorrectedWords(indices) {
       correctedWordsResult = correctedWords.slice(markerIndex + 1);
     }
   }
+
+  // Récupérer les mots corrigés à partir des indices donnés
+  indices.forEach((index) => {
+    // Vérifier si l'indice est valide dans la phrase corrigée
+    if (index >= 0 && index < correctedWords.length) {
+      correctedWordsAtIndices.push(correctedWords[index]);
+    } else {
+      correctedWordsAtIndices.push("Non trouvé");
+    }
+  });
 
   // Récupérer la phrase originale
   const parentDivs = document.querySelectorAll(
@@ -346,6 +354,7 @@ function fetchCorrectedWords(indices) {
     correctedWords: correctedWordsResult,
     originalPhrase: originalWords.join(" "),
     correctedPhrase: correctedWords.join(" "),
+    wordsAtIndices: correctedWordsAtIndices,
   };
 }
 
