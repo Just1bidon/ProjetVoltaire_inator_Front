@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Analyse des mots</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Correction Status</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      min-width: 200px;
+      margin: 10px;
       padding: 10px;
+      width: 300px;
     }
-    #result, #errors, #words {
-      margin-top: 10px;
-      font-weight: bold;
+    div {
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-    <div id="result"></div>
-<div id="errors"></div>
-<div id="words"></div>
-<div id="corrections"></div>
-
-
+  <div id="result"></div>
+  <div id="correction-status"></div> <!-- Affiche si le popup est actif -->
+  <div id="errors"></div>
+  <div id="words"></div>
+  <div id="corrections"></div> <!-- Affiche soit les corrections, soit le message d'absence de faute -->
   <script src="popup.js"></script>
 </body>
 </html>

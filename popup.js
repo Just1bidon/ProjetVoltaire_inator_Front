@@ -1,78 +1,130 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Exécuter le script dans l'onglet actif
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      // Étape 1 : Mise en évidence et récupération des indices des mots fautifs
+      // Vérifier si une correction existe
       chrome.scripting.executeScript(
         {
           target: { tabId: tabs[0].id },
-          func: highlightElements, // Fonction exécutée dans la page
+          func: checkIfCorrectionExists, // Vérifie si une correction est affichée
         },
         function (results) {
-          if (results && results[0] && results[0].result) {
-            var data = results[0].result;
+          const result = results && results[0] && results[0].result;
+          const correctionsDiv = document.getElementById('corrections');
   
-            // Afficher le nombre total d'éléments mis en évidence
-            document.getElementById('result').textContent =
-              "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
-  
-            // Afficher les indices dans le popup
-            if (data.potentialErrorIndices && data.potentialErrorIndices.length > 0) {
-              var indicesText = data.potentialErrorIndices.join(', ');
-              document.getElementById('errors').textContent =
-                'Indices concernés : ' + indicesText;
-            } else {
-              document.getElementById('errors').textContent = 'Aucun indice concerné.';
-            }
-  
-            // Afficher les mots dans le popup
-            if (data.potentialErrorWords && data.potentialErrorWords.length > 0) {
-              var wordsText = data.potentialErrorWords.join(', ');
-              document.getElementById('words').textContent =
-                'Mot(s) à corriger : ' + wordsText;
-            } else {
-              document.getElementById('words').textContent = 'Aucun mot concerné.';
-            }
-  
-            // Étape 2 : Récupérer les mots corrigés aux mêmes indices
-            chrome.scripting.executeScript(
-              {
-                target: { tabId: tabs[0].id },
-                func: fetchCorrectedWords, // Nouvelle fonction pour récupérer les mots corrigés
-                args: [data.potentialErrorIndices], // Passer les indices des mots fautifs
-              },
-              function (correctionResults) {
-                const correctedData =
-                  correctionResults && correctionResults[0] && correctionResults[0].result;
-  
-                if (correctedData && correctedData.correctedWords) {
-                  // Afficher les corrections dans le popup
-                  const correctionsDiv = document.getElementById('corrections');
-                  correctionsDiv.innerHTML = ''; // Vider le contenu précédent
-  
-                  correctedData.correctedWords.forEach((correction, index) => {
-                    const correctionText = document.createElement('div');
-                    correctionText.textContent = `Indice ${correction.index} : "${correction.original}" corrigé en "${correction.corrected}"`;
-                    correctionsDiv.appendChild(correctionText);
-                  });
-                }
-              }
-            );
+          if (!result || !result.isActive) {
+            // Pop-up inactif
+            correctionsDiv.textContent = "Le pop-up de correction n'est pas actif.";
+            processHighlighting(tabs, false);
+          } else if (result.hasCorrection) {
+            // Une correction est affichée
+            processHighlighting(tabs, true);
           } else {
-            document.getElementById('result').textContent = 'Aucun résultat trouvé.';
+            // Pop-up actif mais aucune correction n’est affichée
+            correctionsDiv.textContent = "Il n'y avait pas de faute.";
+            processHighlighting(tabs, false);
           }
         }
       );
     });
   });
   
-
+  // Fonction pour gérer la mise en évidence et l'extraction des mots
+  function processHighlighting(tabs, isCorrectionActive = false) {
+    // Mise en évidence des éléments
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tabs[0].id },
+        func: highlightElements, // Fonction exécutée dans la page
+      },
+      function (highlightResults) {
+        const correctionsDiv = document.getElementById('corrections');
   
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
+        if (highlightResults && highlightResults[0] && highlightResults[0].result) {
+          const data = highlightResults[0].result;
   
-function highlightElements() {
+          // Afficher le nombre total d'éléments mis en évidence
+          document.getElementById('result').textContent =
+            "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
+  
+          // Afficher les indices dans le popup
+          if (data.potentialErrorIndices && data.potentialErrorIndices.length > 0) {
+            var indicesText = data.potentialErrorIndices.join(', ');
+            document.getElementById('errors').textContent =
+              'Indices concernés : ' + indicesText;
+          } else {
+            document.getElementById('errors').textContent = 'Aucun indice concerné.';
+          }
+  
+          // Afficher les mots dans le popup
+          if (data.potentialErrorWords && data.potentialErrorWords.length > 0) {
+            var wordsText = data.potentialErrorWords.join(', ');
+            document.getElementById('words').textContent =
+              'Mot(s) à corriger : ' + wordsText;
+          } else {
+            document.getElementById('words').textContent = 'Aucun mot concerné.';
+          }
+  
+          if (isCorrectionActive && data.potentialErrorIndices.length > 0) {
+            // Récupérer les mots corrigés si le pop-up est actif
+            fetchCorrectedWordsFromIndices(data.potentialErrorIndices, tabs);
+          }
+        } else {
+          correctionsDiv.textContent = "Aucun résultat trouvé.";
+        }
+      }
+    );
+  }
+  
+  // Fonction pour récupérer les mots corrigés
+  function fetchCorrectedWordsFromIndices(indices, tabs) {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId: tabs[0].id },
+        func: fetchCorrectedWords, // Fonction pour récupérer les mots corrigés
+        args: [indices], // Passer les indices des mots fautifs
+      },
+      function (correctionResults) {
+        const correctedData =
+          correctionResults && correctionResults[0] && correctionResults[0].result;
+        const correctionsDiv = document.getElementById('corrections');
+  
+        if (correctedData && correctedData.correctedWords.length > 0) {
+          correctionsDiv.innerHTML = ""; // Vider le contenu précédent
+  
+          correctedData.correctedWords.forEach((correction) => {
+            const correctionText = document.createElement('div');
+            correctionText.textContent = `Indice ${correction.index} : "${correction.original}" corrigé en "${correction.corrected}"`;
+            correctionsDiv.appendChild(correctionText);
+          });
+        } else {
+          correctionsDiv.textContent = "Il n'y avait pas de faute.";
+        }
+      }
+    );
+  }
+  
+  // Vérifie si une correction est affichée dans le pop-up
+  function checkIfCorrectionExists() {
+    const correctionPopup = document.querySelector(
+      'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
+    );
+  
+    if (!correctionPopup) {
+      return { isActive: false, hasCorrection: false };
+    }
+  
+    const correctionDiv = correctionPopup.querySelector(
+      'div.css-175oi2r.r-1qfr5kh.r-1867qdf.r-10ptun7.r-1janqcz'
+    );
+  
+    return {
+      isActive: true,
+      hasCorrection: !!correctionDiv, // true si la div existe, false sinon
+    };
+  }
+  
+  // Fonction pour mettre en évidence les éléments et récupérer les indices des mots à corriger
+  function highlightElements() {
     const parentDivs = document.querySelectorAll(
       'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
     );
@@ -145,92 +197,10 @@ function highlightElements() {
       potentialErrorIndices,
       potentialErrorWords,
     };
-  }  
-  
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-function isCorrectionPopupActive() {
-    const correctionPopup = document.querySelector(
-      'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
-    );
-    return correctionPopup !== null;
   }
   
-  
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-function checkCorrectionPopupStatus() {
-    const popupStatus = isCorrectionPopupActive()
-    ? "Le pop-up de correction est actif."
-    : "Le pop-up de correction n'est pas actif.";
-    
-    // Afficher l'information dans le popup
-    const resultDiv = document.getElementById('correctionPopup');
-    resultDiv.textContent = popupStatus;
-}
-
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-function checkCorrectionPopupAndFetchPhrases() {
-    const correctionPopup = document.querySelector(
-        'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
-    );
-    
-    if (!correctionPopup) {
-        return { isActive: false };
-    }
-    
-    // Récupérer la phrase corrigée
-    const correctedPhraseDiv = correctionPopup.querySelector(
-        'div.css-175oi2r.r-obd0qt.r-18u37iz.r-1w6e6rj.r-bztko3'
-    );
-    
-    const correctedPhrase = correctedPhraseDiv
-    ? Array.from(
-        correctedPhraseDiv.querySelectorAll(
-            'div[style*="font-size: 16px"][style*="font-family: Montserrat-Regular"][style*="color: rgb(22, 27, 39);"]'
-        )
-    ).map((el) => el.textContent.trim())
-    : [];
-    
-    // Récupérer la phrase originale
-    const parentDivs = document.querySelectorAll(
-        'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
-    );
-    
-    const originalPhrase = [];
-    parentDivs.forEach((parent) => {
-        const childElements = parent.querySelectorAll('.css-146c3p1.r-184en5c');
-        childElements.forEach((el) => {
-            originalPhrase.push(el.textContent.trim());
-        });
-    });
-    
-    return {
-        isActive: true,
-        originalPhrase: originalPhrase,
-        correctedPhrase: correctedPhrase,
-    };
-}
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-function fetchCorrectedWords(indices) {
+  // Fonction pour récupérer les mots corrigés
+  function fetchCorrectedWords(indices) {
     const correctionPopup = document.querySelector(
       'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
     );
@@ -265,12 +235,12 @@ function fetchCorrectedWords(indices) {
       });
     });
   
-    // Ajuster les indices (indice - 1) pour corriger le décalage
+    // Ajuster les indices pour corriger le décalage
     const corrections = indices.map((index) => {
-      const adjustedIndex = index; // Ajustement ici
+      const adjustedIndex = index - 1; // Ajustement ici
       return {
         index: index,
-        original: originalWords[adjustedIndex -1 ] || '',
+        original: originalWords[adjustedIndex] || '',
         corrected: correctedWords[adjustedIndex] || '',
       };
     });
