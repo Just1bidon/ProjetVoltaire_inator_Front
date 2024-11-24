@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!result || !result.isActive) {
           // Pop-up inactif
           correctionsDiv.textContent = "Le pop-up de correction n'est pas actif.";
-          processHighlighting(tabs, false);
         } else if (result.hasCorrection) {
           // Une correction est affichée
           correctionsDiv.textContent = "Une correction a été détectée.";
@@ -22,17 +21,13 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
           // Pop-up actif mais aucune correction n’est affichée
           correctionsDiv.textContent = "Il n'y avait pas de faute.";
-          processHighlighting(tabs, false);
-          sendPhraseToAPI(result.originalPhrase); // Envoyer une requête à l'API lorsqu'aucune faute n'est détectée
+          sendPhraseToAPI(result.originalPhrase, 0, null, null); // Aucune faute détectée
         }
       }
     );
   });
 });
 
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 function processHighlighting(tabs, isCorrectionActive = false) {
@@ -66,24 +61,20 @@ function processHighlighting(tabs, isCorrectionActive = false) {
 
         // Récupérer les mots corrigés si le pop-up est actif
         if (isCorrectionActive && data.potentialErrorIndices.length > 0) {
-          fetchCorrectedWordsFromIndices(data.potentialErrorIndices, tabs);
-        } else if (!isCorrectionActive) {
-          // Envoyer la phrase originale à l'API lorsqu'aucune faute n'est détectée
-          sendPhraseToAPI(data.originalPhrase);
+          fetchCorrectedWordsFromIndices(
+            data.potentialErrorIndices,
+            tabs,
+            data.potentialErrorWords
+          );
         }
-      } else {
-        correctionsDiv.textContent = "Aucun résultat trouvé.";
       }
     }
   );
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
 
-function fetchCorrectedWordsFromIndices(indices, tabs) {
+function fetchCorrectedWordsFromIndices(indices, tabs, potentialErrorWords) {
   chrome.scripting.executeScript(
     {
       target: { tabId: tabs[0].id },
@@ -116,30 +107,25 @@ function fetchCorrectedWordsFromIndices(indices, tabs) {
         correctedPhraseDiv.textContent = `Phrase corrigée : "${correctedData.correctedPhrase}"`;
         debugDiv.appendChild(correctedPhraseDiv);
 
-        // Afficher les mots corrigés aux mêmes indices
-        const wordsAtIndicesDiv = document.createElement("div");
-        wordsAtIndicesDiv.textContent = `Mots corrigés aux indices donnés : ${correctedData.wordsAtIndices.join(
-          ", "
-        )}`;
-        debugDiv.appendChild(wordsAtIndicesDiv);
+        // Préparer les mots corrigés à envoyer
+        const motsCorriges = correctedData.correctedWords.length > 0
+          ? correctedData.correctedWords.join(", ")
+          : null;
 
-        // Envoyer la phrase originale à l'API si aucune faute n'est trouvée
-        if (correctedData.originalPhrase && correctedData.correctedWords.length === 0) {
-          sendPhraseToAPI(correctedData.originalPhrase);
-        }
-      } else {
-        correctionsDiv.textContent = "Il n'y avait pas de faute.";
+        // Envoyer les données à l'API
+        sendPhraseToAPI(
+          correctedData.originalPhrase,
+          1, // faute = 1 car il y a une correction
+          potentialErrorWords.join(", "), // mots incorrects
+          motsCorriges // mots corrigés ou null si vide
+        );
       }
     }
   );
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
 
-// Vérifie si une correction est affichée dans le pop-up
 function checkIfCorrectionExists() {
   const correctionPopup = document.querySelector(
     'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
@@ -173,9 +159,6 @@ function checkIfCorrectionExists() {
   };
 }
 
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 function highlightElements() {
@@ -214,25 +197,20 @@ function highlightElements() {
   const potentialErrorIndices = [];
 
   if (highlightMarkers.length === 2) {
-    // Deux marqueurs, on garde la logique actuelle
     const startIndex = highlightMarkers[0];
     const endIndex = highlightMarkers[1];
     for (let i = startIndex + 1; i < endIndex; i++) {
       potentialErrorIndices.push(i);
     }
   } else if (highlightMarkers.length === 1) {
-    // Une seule div
     const markerIndex = highlightMarkers[0];
     const totalElements = elementsInOrder.length;
 
-    // Si l'indice du marqueur est inférieur ou égal à la moitié de la phrase
     if (markerIndex <= Math.floor(totalElements / 2)) {
-      // Marqueur au début, on prend tous les éléments avant la div
       for (let i = 0; i < markerIndex; i++) {
         potentialErrorIndices.push(i);
       }
     } else {
-      // Marqueur à la fin, on prend tous les éléments après la div
       for (let i = markerIndex + 1; i < totalElements; i++) {
         potentialErrorIndices.push(i);
       }
@@ -248,7 +226,6 @@ function highlightElements() {
     }
   });
 
-  // Récupérer la phrase originale
   const originalPhrase = elementsInOrder.map((item) => item.text).join(" ");
 
   return {
@@ -259,9 +236,6 @@ function highlightElements() {
   };
 }
 
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 function fetchCorrectedWords(indices) {
@@ -278,19 +252,9 @@ function fetchCorrectedWords(indices) {
     };
   }
 
-  // Récupérer tous les éléments (mots et marqueurs) dans la phrase corrigée
   const correctedPhraseDiv = correctionPopup.querySelector(
     'div.css-175oi2r.r-obd0qt.r-18u37iz.r-1w6e6rj.r-bztko3'
   );
-
-  if (!correctedPhraseDiv) {
-    return {
-      correctedWords: [],
-      originalPhrase: "",
-      correctedPhrase: "",
-      wordsAtIndices: [],
-    };
-  }
 
   const correctedElements = Array.from(
     correctedPhraseDiv.querySelectorAll(
@@ -298,56 +262,12 @@ function fetchCorrectedWords(indices) {
     )
   );
 
-  // Extraire le texte de chaque élément
   const correctedWords = correctedElements.map((el) => el.textContent.trim());
 
-  // Trouver les marqueurs de correction
-  const correctionMarkers = correctedElements.filter(
-    (el) =>
-      el.classList.contains("r-lrvibr") && el.classList.contains("css-146c3p1")
-  );
-
-  let correctedWordsResult = [];
-  const correctedWordsAtIndices = [];
-
-  if (correctionMarkers.length === 2) {
-    // Deux marqueurs, on garde la logique actuelle
-    const startIndex = correctedElements.indexOf(correctionMarkers[0]);
-    const endIndex = correctedElements.indexOf(correctionMarkers[1]);
-
-    if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-      correctedWordsResult = correctedWords.slice(startIndex + 1, endIndex);
-    }
-  } else if (correctionMarkers.length === 1) {
-    // Une seule div
-    const markerIndex = correctedElements.indexOf(correctionMarkers[0]);
-    const totalWords = correctedElements.length;
-
-    if (markerIndex <= Math.floor(totalWords / 2)) {
-      // Div au "début", on prend tout le contenu avant la div
-      correctedWordsResult = correctedWords.slice(0, markerIndex);
-    } else {
-      // Div à la "fin", on prend tout le contenu après la div
-      correctedWordsResult = correctedWords.slice(markerIndex + 1);
-    }
-  }
-
-  // Récupérer les mots corrigés à partir des indices donnés
-  indices.forEach((index) => {
-    // Vérifier si l'indice est valide dans la phrase corrigée
-    if (index >= 0 && index < correctedWords.length) {
-      correctedWordsAtIndices.push(correctedWords[index]);
-    } else {
-      correctedWordsAtIndices.push("Non trouvé");
-    }
-  });
-
-  // Récupérer la phrase originale
+  const originalWords = [];
   const parentDivs = document.querySelectorAll(
     'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
   );
-
-  const originalWords = [];
   parentDivs.forEach((parent) => {
     const childElements = parent.querySelectorAll(".css-146c3p1.r-184en5c");
     childElements.forEach((el) => {
@@ -355,22 +275,16 @@ function fetchCorrectedWords(indices) {
     });
   });
 
-  // Retourner les résultats
   return {
-    correctedWords: correctedWordsResult,
+    correctedWords: correctedWords.length > 0 ? correctedWords : null,
     originalPhrase: originalWords.join(" "),
     correctedPhrase: correctedWords.join(" "),
-    wordsAtIndices: correctedWordsAtIndices,
   };
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
 
-// Fonction pour envoyer les informations à l'API lorsqu'il n'y a pas de faute
-function sendPhraseToAPI(originalPhrase) {
+function sendPhraseToAPI(originalPhrase, faute = 0, mot_faux = null, mot_corrige = null) {
   if (!originalPhrase || originalPhrase.trim() === "") {
     console.error("Phrase originale vide ou invalide, requête annulée.");
     return;
@@ -379,12 +293,12 @@ function sendPhraseToAPI(originalPhrase) {
 
   const requestBody = {
     phrase: originalPhrase,
-    faute: 0,
-    mot_faux: null,
-    mot_corrige: null,
+    faute: faute,
+    mot_faux: mot_faux,
+    mot_corrige: mot_corrige,
   };
 
-  console.log("Données envoyées :", requestBody); // Debug côté client
+  console.log("Données envoyées :", requestBody);
 
   fetch(apiURL, {
     method: "POST",
