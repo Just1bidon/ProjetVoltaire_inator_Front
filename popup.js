@@ -109,9 +109,12 @@ function fetchCorrectedWordsFromIndices(indices, tabs, potentialErrorWords) {
         debugDiv.appendChild(correctedPhraseDiv);
 
         // Préparer les mots corrigés à envoyer
-        const motsCorriges = correctedData.correctedWords.length > 0
-          ? correctedData.correctedWords.join(", ")
-          : null;
+        const motsCorriges = correctedData.correctedWordsAtIndices.join(", ");
+
+        // Ajouter des logs pour vérifier les correspondances
+        console.log("Indices des mots fautifs :", indices);
+        console.log("Mots fautifs :", potentialErrorWords);
+        console.log("Mots corrigés correspondants :", motsCorriges);
 
         // Envoyer les données à l'API
         sendPhraseToAPI(
@@ -249,13 +252,22 @@ function fetchCorrectedWords(indices) {
       correctedWords: [],
       originalPhrase: "",
       correctedPhrase: "",
-      wordsAtIndices: [],
+      correctedWordsAtIndices: [],
     };
   }
 
   const correctedPhraseDiv = correctionPopup.querySelector(
     'div.css-175oi2r.r-obd0qt.r-18u37iz.r-1w6e6rj.r-bztko3'
   );
+
+  if (!correctedPhraseDiv) {
+    return {
+      correctedWords: [],
+      originalPhrase: "",
+      correctedPhrase: "",
+      correctedWordsAtIndices: [],
+    };
+  }
 
   const correctedElements = Array.from(
     correctedPhraseDiv.querySelectorAll(
@@ -265,10 +277,23 @@ function fetchCorrectedWords(indices) {
 
   const correctedWords = correctedElements.map((el) => el.textContent.trim());
 
-  const originalWords = [];
+  // Récupérer les mots corrigés aux mêmes positions que les mots fautifs
+  const correctedWordsAtIndices = [];
+  indices.forEach((index) => {
+    // Vérifier si l'indice est valide
+    if (index >= 0 && index < correctedWords.length) {
+      correctedWordsAtIndices.push(correctedWords[index]);
+    } else {
+      correctedWordsAtIndices.push("Non trouvé");
+    }
+  });
+
+  // Récupérer la phrase originale
   const parentDivs = document.querySelectorAll(
     'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
   );
+
+  const originalWords = [];
   parentDivs.forEach((parent) => {
     const childElements = parent.querySelectorAll(".css-146c3p1.r-184en5c");
     childElements.forEach((el) => {
@@ -277,11 +302,13 @@ function fetchCorrectedWords(indices) {
   });
 
   return {
-    correctedWords: correctedWords.length > 0 ? correctedWords : null,
+    correctedWords: correctedWords,
     originalPhrase: originalWords.join(" "),
     correctedPhrase: correctedWords.join(" "),
+    correctedWordsAtIndices: correctedWordsAtIndices,
   };
 }
+
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
