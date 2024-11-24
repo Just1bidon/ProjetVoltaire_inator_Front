@@ -317,16 +317,26 @@ function sendPhraseToAPI(originalPhrase, faute = 0, mot_faux = null, mot_corrige
     console.error("Phrase originale vide ou invalide, requête annulée.");
     return;
   }
+
+  // Fonction pour supprimer les ponctuations d'une chaîne
+  function removePunctuation(text) {
+    return text ? text.replace(/[.,!?;:"'()\[\]{}]/g, "").trim() : null;
+  }
+
+  // Nettoyer les champs mot_faux et mot_corrige
+  const cleanedMotFaux = removePunctuation(mot_faux);
+  const cleanedMotCorrige = removePunctuation(mot_corrige);
+
   const apiURL = "http://46.202.131.91:8000/phrases";
 
   const requestBody = {
     phrase: originalPhrase,
     faute: faute,
-    mot_faux: mot_faux,
-    mot_corrige: mot_corrige,
+    mot_faux: cleanedMotFaux,
+    mot_corrige: cleanedMotCorrige,
   };
 
-  console.log("Données envoyées :", requestBody);
+  console.log("Données nettoyées et envoyées :", requestBody);
 
   fetch(apiURL, {
     method: "POST",
