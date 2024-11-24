@@ -23,18 +23,17 @@ document.addEventListener("DOMContentLoaded", function () {
           // Pop-up actif mais aucune correction n’est affichée
           correctionsDiv.textContent = "Il n'y avait pas de faute.";
           processHighlighting(tabs, false);
+          sendPhraseToAPI(result.originalPhrase); // Envoyer une requête à l'API lorsqu'aucune faute n'est détectée
         }
       }
     );
   });
 });
 
-
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
-
 
 function processHighlighting(tabs, isCorrectionActive = false) {
   // Mise en évidence des éléments
@@ -68,6 +67,9 @@ function processHighlighting(tabs, isCorrectionActive = false) {
         // Récupérer les mots corrigés si le pop-up est actif
         if (isCorrectionActive && data.potentialErrorIndices.length > 0) {
           fetchCorrectedWordsFromIndices(data.potentialErrorIndices, tabs);
+        } else if (!isCorrectionActive) {
+          // Envoyer la phrase originale à l'API lorsqu'aucune faute n'est détectée
+          sendPhraseToAPI(data.originalPhrase);
         }
       } else {
         correctionsDiv.textContent = "Aucun résultat trouvé.";
@@ -75,7 +77,6 @@ function processHighlighting(tabs, isCorrectionActive = false) {
     }
   );
 }
-
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -121,13 +122,17 @@ function fetchCorrectedWordsFromIndices(indices, tabs) {
           ", "
         )}`;
         debugDiv.appendChild(wordsAtIndicesDiv);
+
+        // Envoyer la phrase originale à l'API si aucune faute n'est trouvée
+        if (correctedData.originalPhrase && correctedData.correctedWords.length === 0) {
+          sendPhraseToAPI(correctedData.originalPhrase);
+        }
       } else {
         correctionsDiv.textContent = "Il n'y avait pas de faute.";
       }
     }
   );
 }
-
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,9 +153,23 @@ function checkIfCorrectionExists() {
     'div.css-175oi2r.r-1qfr5kh.r-1867qdf.r-10ptun7.r-1janqcz'
   );
 
+  // Récupérer la phrase originale
+  const parentDivs = document.querySelectorAll(
+    'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
+  );
+
+  const originalWords = [];
+  parentDivs.forEach((parent) => {
+    const childElements = parent.querySelectorAll(".css-146c3p1.r-184en5c");
+    childElements.forEach((el) => {
+      originalWords.push(el.textContent.trim());
+    });
+  });
+
   return {
     isActive: true,
     hasCorrection: !!correctionDiv, // true si la div existe, false sinon
+    originalPhrase: originalWords.join(" "),
   };
 }
 
@@ -158,7 +177,6 @@ function checkIfCorrectionExists() {
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
-
 
 function highlightElements() {
   const parentDivs = document.querySelectorAll(
@@ -230,13 +248,14 @@ function highlightElements() {
     }
   });
 
-  // Stocker les mots potentiellement faux pour les utiliser ultérieurement
-  window.potentialErrorWords = potentialErrorWords;
+  // Récupérer la phrase originale
+  const originalPhrase = elementsInOrder.map((item) => item.text).join(" ");
 
   return {
     totalOccurrences,
     potentialErrorIndices,
     potentialErrorWords,
+    originalPhrase,
   };
 }
 
@@ -244,7 +263,6 @@ function highlightElements() {
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------
-
 
 function fetchCorrectedWords(indices) {
   const correctionPopup = document.querySelector(
@@ -344,4 +362,47 @@ function fetchCorrectedWords(indices) {
     correctedPhrase: correctedWords.join(" "),
     wordsAtIndices: correctedWordsAtIndices,
   };
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+// Fonction pour envoyer les informations à l'API lorsqu'il n'y a pas de faute
+function sendPhraseToAPI(originalPhrase) {
+  if (!originalPhrase || originalPhrase.trim() === "") {
+    console.error("Phrase originale vide ou invalide, requête annulée.");
+    return;
+  }
+  const apiURL = "http://46.202.131.91:8000/phrases";
+
+  const requestBody = {
+    phrase: originalPhrase,
+    faute: 0,
+    mot_faux: null,
+    mot_corrige: null,
+  };
+
+  console.log("Données envoyées :", requestBody); // Debug côté client
+
+  fetch(apiURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Erreur lors de la requête à l'API : " + response.status);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Réponse de l'API :", data);
+    })
+    .catch((error) => {
+      console.error("Erreur lors de la requête :", error);
+    });
 }
