@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!result || !result.isActive) {
           // Pop-up inactif
           correctionsDiv.textContent = "Le pop-up de correction n'est pas actif.";
+          processHighlighting(tabs, false); // Exécuter le surlignage même si le pop-up n'est pas actif
         } else if (result.hasCorrection) {
           // Une correction est affichée
           correctionsDiv.textContent = "Une correction a été détectée.";
