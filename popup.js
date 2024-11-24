@@ -94,7 +94,6 @@ function fetchCorrectedWordsFromIndices(indices, tabs) {
         correctionResults && correctionResults[0] && correctionResults[0].result;
       const correctionsDiv = document.getElementById("corrections");
       const debugDiv = document.getElementById("debug-info");
-      const apiResponseDiv = document.getElementById("api-response");
 
       if (correctedData) {
         correctionsDiv.innerHTML = "";
@@ -122,17 +121,6 @@ function fetchCorrectedWordsFromIndices(indices, tabs) {
           ", "
         )}`;
         debugDiv.appendChild(wordsAtIndicesDiv);
-
-        // Envoyer à l'API le premier mot faux et corrigé
-        const motFaux = correctedData.wordsAtIndices[0] || "";
-        const motCorrige = correctedData.correctedWords[0] || "";
-
-        sendPhraseToAPI(
-          correctedData.originalPhrase,
-          correctedData.correctedWords.length > 0,
-          motFaux,
-          motCorrige
-        );
       } else {
         correctionsDiv.textContent = "Il n'y avait pas de faute.";
       }
@@ -356,50 +344,4 @@ function fetchCorrectedWords(indices) {
     correctedPhrase: correctedWords.join(" "),
     wordsAtIndices: correctedWordsAtIndices,
   };
-}
-
-
-
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------------------------------------------------------
-
-
-function sendPhraseToAPI(phrase, faute, motFaux = "", motCorrige = "") {
-  const apiURL = "http://46.202.131.91:8000/phrases";
-
-  const requestBody = {
-    phrase: phrase,
-    faute: faute ? 1 : 0,
-    mot_faux: motFaux || null,
-    mot_corrige: motCorrige || null, // Mot corrigé peut être null
-  };
-
-  console.log("Données envoyées :", requestBody); // Debug côté client
-
-  fetch(apiURL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestBody),
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Erreur lors de la requête à l'API : " + response.status);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      console.log("Réponse de l'API :", data);
-      const apiResponseDiv = document.getElementById("api-response");
-      apiResponseDiv.textContent = data.message || "Réponse de l'API reçue.";
-    })
-    .catch((error) => {
-      console.error("Erreur lors de la requête :", error);
-      const apiResponseDiv = document.getElementById("api-response");
-      apiResponseDiv.textContent =
-        "Une erreur est survenue lors de la communication avec l'API.";
-    });
 }
