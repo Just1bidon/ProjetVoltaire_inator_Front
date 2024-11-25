@@ -24,10 +24,16 @@ document.addEventListener("DOMContentLoaded", function () {
           correctionsDiv.textContent = "Il n'y avait pas de faute.";
           sendPhraseToAPI(result.originalPhrase, 0, null, null); // Aucune faute détectée
         }
+
+        // Vérifier si la phrase existe déjà dans la base
+        if (result && result.originalPhrase) {
+          checkPhraseInDatabase(result.originalPhrase);
+        }
       }
     );
   });
 });
+
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -318,43 +324,158 @@ function sendPhraseToAPI(originalPhrase, faute = 0, mot_faux = null, mot_corrige
     return;
   }
 
-  // Fonction pour supprimer les ponctuations d'une chaîne
-  function removePunctuation(text) {
-    return text ? text.replace(/[.,!?;:"'()\[\]{}]/g, "").trim() : null;
+  // Fonction pour formater la phrase ou le texte
+  function formatText(text) {
+    if (!text) return null;
+    return text
+      .replace(/\s+/g, " ") // Remplace les espaces multiples par un seul espace
+      .replace(/\s([.,!?;:])/g, "$1") // Supprime les espaces avant la ponctuation
+      .replace(/([.,!?;:])\s/g, "$1 ") // Assure un espace après la ponctuation
+      .trim(); // Supprime les espaces au début et à la fin
   }
 
-  // Nettoyer les champs mot_faux et mot_corrige
-  const cleanedMotFaux = removePunctuation(mot_faux);
-  const cleanedMotCorrige = removePunctuation(mot_corrige);
+  // Nettoyer la phrase originale, mot_faux et mot_corrige
+  const formattedPhrase = formatText(originalPhrase);
+  const cleanedMotFaux = formatText(mot_faux);
+  const cleanedMotCorrige = formatText(mot_corrige);
 
-  const apiURL = "http://46.202.131.91:8000/phrases";
-
-  const requestBody = {
-    phrase: originalPhrase,
-    faute: faute,
-    mot_faux: cleanedMotFaux,
-    mot_corrige: cleanedMotCorrige,
-  };
-
-  console.log("Données nettoyées et envoyées :", requestBody);
+  // Vérifier si la phrase existe déjà dans la base avant de l'ajouter
+  const apiURL = `http://46.202.131.91:8000/phrases?phrase=${encodeURIComponent(formattedPhrase)}`;
 
   fetch(apiURL, {
-    method: "POST",
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(requestBody),
   })
     .then((response) => {
       if (!response.ok) {
-        throw new Error("Erreur lors de la requête à l'API : " + response.status);
+        throw new Error(`Erreur lors de la requête à l'API : ${response.status}`);
       }
       return response.json();
     })
     .then((data) => {
-      console.log("Réponse de l'API :", data);
+      if (data.length > 0) {
+        // La phrase existe déjà dans la base, ne pas l'ajouter
+        console.log("Phrase déjà existante dans la base :", data[0]);
+        handleExistingPhrase(data[0]); // Gérer la phrase existante
+      } else {
+        // La phrase n'existe pas, l'ajouter
+        const requestBody = {
+          phrase: formattedPhrase,
+          faute: faute,
+          mot_faux: cleanedMotFaux,
+          mot_corrige: cleanedMotCorrige,
+        };
+
+        console.log("Ajout de la phrase :", requestBody);
+
+        fetch("http://46.202.131.91:8000/phrases", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                "Erreur lors de la requête à l'API : " + response.status
+              );
+            }
+            return response.json();
+          })
+          .then((data) => {
+            console.log("Réponse de l'API après ajout :", data);
+          })
+          .catch((error) => {
+            console.error("Erreur lors de la requête POST :", error);
+          });
+      }
     })
     .catch((error) => {
-      console.error("Erreur lors de la requête :", error);
+      console.error("Erreur lors de la requête GET :", error);
     });
+}
+
+
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function checkPhraseInDatabase(phrase) {
+  if (!phrase || phrase.trim() === "") {
+    console.error("Phrase invalide ou vide.");
+    return;
+  }
+
+  // Fonction pour nettoyer la phrase avant la requête
+  function cleanPhraseForQuery(text) {
+    return text
+      .replace(/\s+/g, " ") // Remplace les espaces multiples par un seul espace
+      .replace(/\s([.,!?;:])/g, "$1") // Supprime les espaces avant la ponctuation
+      .replace(/([.,!?;:])\s/g, "$1 ") // Assure un espace après la ponctuation
+      .trim(); // Supprime les espaces au début et à la fin
+  }
+
+  // Nettoyer la phrase
+  const cleanedPhrase = cleanPhraseForQuery(phrase);
+
+  // URL de l'API avec paramètre de recherche
+  const apiURL = `http://46.202.131.91:8000/phrases?phrase=${encodeURIComponent(cleanedPhrase)}`;
+
+  console.log("Recherche de la phrase dans la base :", cleanedPhrase);
+
+  // Requête GET à l'API
+  fetch(apiURL, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Erreur lors de la requête à l'API : ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      if (data.length > 0) {
+        // La phrase existe dans la base
+        console.log("Phrase trouvée dans la base :", data);
+        handleExistingPhrase(data[0]); // Appel à une fonction pour gérer les résultats
+      } else {
+        // La phrase n'existe pas
+        console.log("Phrase non trouvée dans la base.");
+        handleNonExistingPhrase(cleanedPhrase); // Appel à une fonction pour gérer ce cas
+      }
+    })
+    .catch((error) => {
+      console.error("Erreur lors de la requête GET :", error);
+    });
+}
+
+
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+function handleExistingPhrase(data) {
+  console.log("Données de la phrase trouvée :", data);
+
+  // Exemple d'affichage des informations dans l'interface
+  const correctionsDiv = document.getElementById("corrections");
+  correctionsDiv.textContent = `Phrase déjà présente dans la base avec ID ${data.id}. 
+    Faute : ${data.faute ? "Oui" : "Non"} 
+    Mot(s) fautif(s) : ${data.mot_faux || "Aucun"} 
+    Correction(s) : ${data.mot_corrige || "Aucune"}`;
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+
+function handleNonExistingPhrase(phrase) {
+  console.log("Phrase non trouvée. Prête à être ajoutée si nécessaire :", phrase);
+
+  // Exemple d'affichage dans l'interface
+  const correctionsDiv = document.getElementById("corrections");
+  correctionsDiv.textContent = "Phrase non trouvée dans la base. Vous pouvez l'ajouter.";
 }
