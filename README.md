@@ -1,7 +1,11 @@
 
-# ProjetVoltaire_inator_Front
+# ProjetVoltaire_inator
 
-Cette extension Chrome permet d'identifier les mots potentiellement fautifs dans une phrase. Cependant, si une faute existe, elle se trouve forcément dans les mots surlignés, mais il n'est pas garanti qu'une faute soit présente.
+Cette **extension Chrome** permet d'identifier les mots **potentiellement fautifs** dans une phrase du Projet Voltaire.
+
+Cependant, si une faute existe, elle se trouve quasiment tout le temps dans les mots surlignés, mais il n'est pas garanti qu'une faute soit présente parmis ces mots.
+
+Elle est compatible avce tous les **navigateurs chromium**
 
 ## Installation
 
@@ -9,7 +13,6 @@ Cette extension Chrome permet d'identifier les mots potentiellement fautifs dans
     
     ```bash
     git clone -b dev https://github.com/Just1bidon/ProjetVoltaire_inator_Front.git
-    
     ```
     
 2. Ouvrez **Google Chrome** et accédez à la page des extensions :
@@ -23,11 +26,18 @@ Cette extension Chrome permet d'identifier les mots potentiellement fautifs dans
 
 ## Utilisation
 
-1. Accédez à une page contenant une phrase à analyser.
-2. Cliquez sur l'icône de l'extension dans la barre d'outils de Chrome.
-3. Le popup affichera :
-    - Les mots surlignés en rouge, qui sont **potentiellement fautifs**.
-    - Ces mots sont des indices, mais il n’est pas garanti qu’ils contiennent une faute.
+1. Accédez à une page (https://apprentissage.appli3.projet-voltaire.fr/entrainement") contenant une phrase à analyser.
+2. Cliquez sur l'icône de l'extension dans la barre d'outils de Chrome ou **cmd + E** / **ctrl + E**.
+3. Le popup s'affichera une **1ère fois** avec:
+    - Les mots surlignés en rouge sont **potentiellement fautifs**.
+    - Si la phrase est déjà dans **la base de donnée** ou non
+        - Si oui : si elle a une faute ou non
+    - Des **logs pour le debugages** qui sont à ignoré
+4. Une fois la faute cliquée et le popup de correction affiché
+5. Re cliquez sur l'icône de l'extension dans la barre d'outils de Chrome ou **cmd + E** / **ctrl + E**.
+6. Le popup s'affichera une **2ème fois**:
+    - Si la phrase n'est pas encore dans la base de donnée, elle sera **ajouter automatiquement**
+
 
 ## Limitations
 
