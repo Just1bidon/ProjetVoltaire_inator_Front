@@ -1,38 +1,34 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Exécuter le script dans l'onglet actif
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    // Vérifier si une correction existe
     chrome.scripting.executeScript(
       {
         target: { tabId: tabs[0].id },
-        func: checkIfCorrectionExists, // Vérifie si une correction est affichée
+        func: checkIfCorrectionExists,
       },
       function (results) {
         const result = results && results[0] && results[0].result;
         const correctionsDiv = document.getElementById("corrections");
 
+        if (result && result.originalPhrase) {
+          // Vérifier si la phrase existe déjà dans la base
+          checkPhraseInDatabase(result.originalPhrase);
+        }
+
         if (!result || !result.isActive) {
-          // Pop-up inactif
           correctionsDiv.textContent = "Le pop-up de correction n'est pas actif.";
-          processHighlighting(tabs, false); // Exécuter le surlignage même si le pop-up n'est pas actif
+          processHighlighting(tabs, false);
         } else if (result.hasCorrection) {
-          // Une correction est affichée
           correctionsDiv.textContent = "Une correction a été détectée.";
           processHighlighting(tabs, true);
         } else {
-          // Pop-up actif mais aucune correction n’est affichée
           correctionsDiv.textContent = "Il n'y avait pas de faute.";
-          sendPhraseToAPI(result.originalPhrase, 0, null, null); // Aucune faute détectée
-        }
-
-        // Vérifier si la phrase existe déjà dans la base
-        if (result && result.originalPhrase) {
-          checkPhraseInDatabase(result.originalPhrase);
+          sendPhraseToAPI(result.originalPhrase, 0, null, null);
         }
       }
     );
   });
 });
+
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,13 +137,11 @@ function checkIfCorrectionExists() {
     'div.css-175oi2r.r-1kihuf0.r-14lw9ot.r-q36t59.r-13awgt0.r-5hg35f.r-u8s1d.r-13qz1uu'
   );
 
-  if (!correctionPopup) {
-    return { isActive: false, hasCorrection: false };
-  }
-
-  const correctionDiv = correctionPopup.querySelector(
-    'div.css-175oi2r.r-1qfr5kh.r-1867qdf.r-10ptun7.r-1janqcz'
-  );
+  const correctionDiv = correctionPopup
+    ? correctionPopup.querySelector(
+        'div.css-175oi2r.r-1qfr5kh.r-1867qdf.r-10ptun7.r-1janqcz'
+      )
+    : null;
 
   // Récupérer la phrase originale
   const parentDivs = document.querySelectorAll(
@@ -163,11 +157,12 @@ function checkIfCorrectionExists() {
   });
 
   return {
-    isActive: true,
-    hasCorrection: !!correctionDiv, // true si la div existe, false sinon
+    isActive: !!correctionPopup,
+    hasCorrection: !!correctionDiv,
     originalPhrase: originalWords.join(" "),
   };
 }
+
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -462,13 +457,23 @@ function checkPhraseInDatabase(phrase) {
 function handleExistingPhrase(data) {
   console.log("Données de la phrase trouvée :", data);
 
-  // Exemple d'affichage des informations dans l'interface
   const correctionsDiv = document.getElementById("corrections");
-  correctionsDiv.textContent = `Phrase déjà présente dans la base avec ID ${data.id}. 
-    Faute : ${data.faute ? "Oui" : "Non"} 
-    Mot(s) fautif(s) : ${data.mot_faux || "Aucun"} 
-    Correction(s) : ${data.mot_corrige || "Aucune"}`;
+
+  if (data.faute == 1) {
+    correctionsDiv.textContent = "Attention ! Cette phrase contient une faute connue.";
+    // Vous pouvez ajouter d'autres actions ici, comme mettre en évidence la faute
+  } else {
+    correctionsDiv.textContent = "Cette phrase est connue et ne contient pas de faute.";
+  }
+
+  correctionsDiv.textContent += `
+    Phrase déjà présente dans la base avec ID ${data.id}.
+    Faute : ${data.faute ? "Oui" : "Non"}
+    Mot(s) fautif(s) : ${data.mot_faux || "Aucun"}
+    Correction(s) : ${data.mot_corrige || "Aucune"}
+  `;
 }
+
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
