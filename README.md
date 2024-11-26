@@ -12,7 +12,7 @@ Elle est compatible avce tous les **navigateurs chromium**
 1. Clonez ce dépôt Git en local en utilisant la commande suivante :
     
     ```bash
-    git clone -b dev https://github.com/Just1bidon/ProjetVoltaire_inator_Front.git
+    git clone https://github.com/Just1bidon/ProjetVoltaire_inator_Front.git
     ```
     
 2. Ouvrez **Google Chrome** et accédez à la page des extensions :
