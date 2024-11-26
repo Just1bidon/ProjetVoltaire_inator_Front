@@ -1,11 +1,25 @@
 {
-    "manifest_version": 3,
-    "name": "Analyse des mots",
-    "version": "1.0",
-    "description": "Extension qui analyse les mots sur une page.",
-    "permissions": ["activeTab", "scripting"],
-    "action": {
+  "manifest_version": 3,
+  "name": "Analyse des mots",
+  "version": "1.0",
+  "description": "Extension qui analyse les mots sur une page.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+      "https://apprentissage.appli3.projet-voltaire.fr/entrainement/*"
+  ],
+  "action": {
       "default_popup": "popup.html"
-    }
+  },
+  "commands": {
+      "open-extension": {
+          "suggested_key": {
+              "default": "Ctrl+E",
+              "mac": "Command+E"
+          },
+          "description": "Ouvrir l'extension"
+      }
+  },
+  "background": {
+    "service_worker": "background.js"
   }
-  
+}
