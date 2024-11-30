@@ -1,5 +1,6 @@
-
 # ProjetVoltaire_inator
+
+**L'extention fonctionne avec une base de donnée, plus de gens vont l'installer, plus il y aura de réponses dans la base de donnée**
 
 Cette **extension Chrome** permet d'identifier les mots **potentiellement fautifs** dans une phrase du Projet Voltaire.
 
