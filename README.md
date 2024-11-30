@@ -23,7 +23,8 @@ Elle est compatible avce tous les **navigateurs chromium**
 3. Activez le mode développeur (coin supérieur droit de la page).
 4. Cliquez sur **"Charger l’extension non empaquetée"**.
 5. Sélectionnez le dossier du projet que vous avez cloné.
-6. L'extension est maintenant installée et prête à être utilisée.
+6. Ajoutez l'extention en favoris pour qu'elle apparaisse dans la barre des tâches google
+7. L'extension est maintenant installée et prête à être utilisée.
 
 ## Utilisation
 
