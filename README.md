@@ -27,7 +27,7 @@ Elle est compatible avce tous les **navigateurs chromium**
 ## Utilisation
 
 1. Accédez à une page (https://apprentissage.appli3.projet-voltaire.fr/entrainement") contenant une phrase à analyser.
-2. Cliquez sur l'icône de l'extension dans la barre d'outils de Chrome ou **cmd + E** / **ctrl + E**.
+2. Cliquez sur l'icône de l'extension dans la barre d'outils de Chrome ou **cmd + E** / **ctrl + X**.
 3. Le popup s'affichera une **1ère fois** avec:
     - Les mots surlignés en rouge sont **potentiellement fautifs**.
     - Si la phrase est déjà dans **la base de donnée** ou non

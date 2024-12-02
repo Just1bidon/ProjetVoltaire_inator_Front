@@ -13,7 +13,7 @@
   "commands": {
       "open-extension": {
           "suggested_key": {
-              "default": "Ctrl+E",
+              "default": "Ctrl+X",
               "mac": "Command+E"
           },
           "description": "Ouvrir l'extension"
