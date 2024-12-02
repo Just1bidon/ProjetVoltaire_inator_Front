@@ -5,99 +5,122 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Correction Status</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      padding: 10px;
+      width: 300px;
+    }
+    div {<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Correction Status</title>
+  <style>
     /* Style global */
     body {
       font-family: Arial, sans-serif;
       margin: 10px;
       padding: 10px;
       background-color: #f5f5f7;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    /* Style des divs */
-    div {
-      margin-bottom: 10px;
     }
 
     /* Conteneur principal */
-    #result, #correction-status, #errors, #words, #corrections, #debug-info, #api-response {
+    .container {
       background-color: white;
-      padding: 15px;
+      width: 300px;
+      padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin: 0 auto;
     }
 
-    /* Conteneur de statut de correction */
-    #correction-status {
+    /* Titre principal */
+    h1 {
+      font-size: 1.6rem;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    /* Sections */
+    div {
+      margin-bottom: 15px;
+    }
+
+    /* Statut de correction */
+    .status-box {
+      padding: 15px;
+      margin-bottom: 20px;
       text-align: center;
       font-weight: bold;
       color: white;
       border-radius: 12px;
-      padding: 15px;
     }
 
-    #correction-status.green {
+    .status-box.green {
       background-color: #34c759;
     }
 
-    #correction-status.red {
+    .status-box.red {
       background-color: #ff3b30;
     }
 
-    #correction-status.yellow {
+    .status-box.yellow {
       background-color: #ffcc00;
       color: #333;
     }
 
-    /* Style des sections mots à corriger et corrections */
-    #words, #corrections {
-      font-size: 1rem;
-      color: #333;
+    /* Section des mots à corriger */
+    .content-box {
+      padding: 15px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
-    /* Section des mots à corriger */
-    #words {
+    .error-box {
       background-color: #ffe5e5;
       border: 1px solid #ff5c5c;
     }
 
-    /* Section des corrections proposées */
-    #corrections {
+    .correction-box {
       background-color: #d9f7be;
       border: 1px solid #72d5a8;
     }
 
-    /* Titres des sections */
+    /* Titres et contenu des sections */
     .title {
       font-weight: bold;
       margin-bottom: 10px;
     }
 
-    /* Bouton pour actions supplémentaires */
-    .button {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #007aff;
-      color: white;
+    .content {
       font-size: 1rem;
-      border-radius: 12px;
-      text-align: center;
-      width: 100%;
-      cursor: pointer;
-      margin-top: 20px;
-      text-decoration: none;
+      margin: 5px 0;
     }
-
-    .button:hover {
-      background-color: #0051a8;
-    }
-
   </style>
 </head>
 <body>
+
+  <div class="container">
+    <h1>Correction Status</h1>
+
+    <div id="words" class="content-box error-box">
+      <div class="title">Words to Correct:</div>
+      <div class="content">...</div>
+    </div>
+
+    <div id="corrections" class="content-box correction-box">
+      <div class="title" id="correction-status-title">Correction Status:</div>
+      <div class="content" id="correction-status-content">...</div>
+    </div>
+
+    <div id="correction-status" class="status-box yellow">Loading...</div>
+  </div>
+
+  <!-- Divs non modifiés -->
   <div id="result"></div>
   <div id="correction-status"></div> <!-- Affiche si le popup est actif -->
   <div id="errors"></div>
@@ -105,6 +128,7 @@
   <div id="corrections"></div> <!-- Affiche soit les corrections -->
   <div id="debug-info"></div> <!-- Pour afficher les phrases originales et corrigées -->
   <div id="api-response"></div> <!-- Affiche la réponse de l'API -->
+
   <script src="popup.js"></script>
 </body>
 </html>
