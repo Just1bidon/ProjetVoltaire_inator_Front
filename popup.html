@@ -11,14 +11,27 @@
       padding: 10px;
       width: 300px;
     }
-    div {
+    .status-box {
+      padding: 10px;
       margin-bottom: 10px;
+      border-radius: 5px;
+      color: white;
+    }
+    .status-box.green {
+      background-color: green;
+    }
+    .status-box.red {
+      background-color: red;
+    }
+    .status-box.yellow {
+      background-color: yellow;
+      color: black;
     }
   </style>
 </head>
 <body>
   <div id="result"></div>
-  <div id="correction-status"></div> <!-- Affiche si le popup est actif -->
+  <div id="correction-status" class="status-box"></div> <!-- Affiche si le popup est actif -->
   <div id="errors"></div>
   <div id="words"></div>
   <div id="corrections"></div> <!-- Affiche soit les corrections -->

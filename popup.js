@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
       function (results) {
         const result = results && results[0] && results[0].result;
         const correctionsDiv = document.getElementById("corrections");
+        const correctionStatusDiv = document.getElementById("correction-status");
 
         if (result && result.originalPhrase) {
           // Vérifier si la phrase existe déjà dans la base
@@ -16,12 +17,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!result || !result.isActive) {
           correctionsDiv.textContent = "Le pop-up de correction n'est pas actif.";
+          correctionStatusDiv.textContent = "Le pop-up de correction n'est pas actif.";
+          correctionStatusDiv.classList.add("yellow");
           processHighlighting(tabs, false);
         } else if (result.hasCorrection) {
           correctionsDiv.textContent = "Une correction a été détectée.";
+          correctionStatusDiv.textContent = "Une correction a été détectée.";
+          correctionStatusDiv.classList.add("red");
           processHighlighting(tabs, true);
         } else {
           correctionsDiv.textContent = "Il n'y avait pas de faute.";
+          correctionStatusDiv.textContent = "Il n'y avait pas de faute.";
+          correctionStatusDiv.classList.add("green");
           sendPhraseToAPI(result.originalPhrase, 0, null, null);
         }
       }
@@ -458,12 +465,16 @@ function handleExistingPhrase(data) {
   console.log("Données de la phrase trouvée :", data);
 
   const correctionsDiv = document.getElementById("corrections");
+  const correctionStatusDiv = document.getElementById("correction-status");
 
   if (data.faute == 1) {
     correctionsDiv.textContent = "Attention ! Cette phrase contient une faute connue.";
-    // Vous pouvez ajouter d'autres actions ici, comme mettre en évidence la faute
+    correctionStatusDiv.textContent = "Attention ! Cette phrase contient une faute connue.";
+    correctionStatusDiv.classList.add("red");
   } else {
     correctionsDiv.textContent = "Cette phrase est connue et ne contient pas de faute.";
+    correctionStatusDiv.textContent = "Cette phrase est connue et ne contient pas de faute.";
+    correctionStatusDiv.classList.add("green");
   }
 
   correctionsDiv.textContent += `
@@ -480,7 +491,10 @@ function handleExistingPhrase(data) {
 function handleNonExistingPhrase(phrase) {
   console.log("Phrase non trouvée. Prête à être ajoutée si nécessaire :", phrase);
 
-  // Exemple d'affichage dans l'interface
   const correctionsDiv = document.getElementById("corrections");
+  const correctionStatusDiv = document.getElementById("correction-status");
+
   correctionsDiv.textContent = "Phrase non trouvée dans la base. Vous pouvez l'ajouter.";
+  correctionStatusDiv.textContent = "Phrase non trouvée dans la base. Vous pouvez l'ajouter.";
+  correctionStatusDiv.classList.add("green");
 }
