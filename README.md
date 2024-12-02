@@ -18,7 +18,7 @@ Elle est compatible avce tous les **navigateurs chromium**
     
 2. Ouvrez **Google Chrome** et accédez à la page des extensions :
     
-    [chrome://extensions/](https://www.notion.so/1479190e60d98091b91fe75575a6b98c?pvs=21)
+    [chrome://extensions/]
     
 3. Activez le mode développeur (coin supérieur droit de la page).
 4. Cliquez sur **"Charger l’extension non empaquetée"**.
@@ -36,7 +36,7 @@ Elle est compatible avce tous les **navigateurs chromium**
         - Si oui : si elle a une faute ou non
     - Des **logs pour le debugages** qui sont à ignoré
 4. Une fois la faute cliquée et le popup de correction affiché
-5. Re cliquez sur l'icône de l'extension dans la barre d'outils de Chrome ou **cmd + E** / **ctrl + E**.
+5. Re cliquez sur l'icône de l'extension dans la barre d'outils de Chrome ou **cmd + E** / **ctrl + X**.
 6. Le popup s'affichera une **2ème fois**:
     - Si la phrase n'est pas encore dans la base de donnée, elle sera **ajouter automatiquement**
 
