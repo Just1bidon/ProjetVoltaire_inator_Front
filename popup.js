@@ -53,15 +53,7 @@ function processHighlighting(tabs, isCorrectionActive = false) {
       if (highlightResults && highlightResults[0] && highlightResults[0].result) {
         const data = highlightResults[0].result;
 
-        // Afficher le nombre total d'éléments mis en évidence
-        document.getElementById("result").textContent =
-          "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
 
-        // Afficher les indices dans le popup
-        document.getElementById("errors").textContent =
-          data.potentialErrorIndices && data.potentialErrorIndices.length > 0
-            ? "Indices concernés : " + data.potentialErrorIndices.join(", ")
-            : "Aucun indice concerné.";
 
         // Afficher les mots dans le popup
         document.getElementById("words").textContent =
@@ -448,7 +440,7 @@ function checkPhraseInDatabase(phrase) {
         handleExistingPhrase(data[0]); // Appel à une fonction pour gérer les résultats
       } else {
         // La phrase n'existe pas
-        console.log("Phrase non trouvée dans la base.");
+        console.log("Phrase non trouvée dans la base ❌.");
         handleNonExistingPhrase(cleanedPhrase); // Appel à une fonction pour gérer ce cas
       }
     })
@@ -468,33 +460,28 @@ function handleExistingPhrase(data) {
   const correctionStatusDiv = document.getElementById("correction-status");
 
   if (data.faute == 1) {
-    correctionsDiv.textContent = "Attention ! Cette phrase contient une faute connue.";
-    correctionStatusDiv.textContent = "Attention ! Cette phrase contient une faute connue.";
+    correctionsDiv.textContent = "Attention ! Cette phrase contient une faute connue ⚠️.";
+    correctionStatusDiv.textContent = "Attention ! Cette phrase contient une faute connue ⚠️.";
     correctionStatusDiv.classList.add("red");
   } else {
-    correctionsDiv.textContent = "Cette phrase est connue et ne contient pas de faute.";
-    correctionStatusDiv.textContent = "Cette phrase est connue et ne contient pas de faute.";
+    correctionsDiv.textContent = "Cette phrase est connue et ne contient pas de faute ✅.";
+    correctionStatusDiv.textContent = "Cette phrase est connue et ne contient pas de faute ✅.";
     correctionStatusDiv.classList.add("green");
   }
 
   correctionsDiv.textContent += `
-    Phrase déjà présente dans la base avec ID ${data.id}.
-    Faute : ${data.faute ? "Oui" : "Non"}
-    Mot(s) fautif(s) : ${data.mot_faux || "Aucun"}
     Correction(s) : ${data.mot_corrige || "Aucune"}
   `;
 }
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
-
 function handleNonExistingPhrase(phrase) {
-  console.log("Phrase non trouvée. Prête à être ajoutée si nécessaire :", phrase);
+  console.log("Phrase non trouvée ❌. Prête à être ajoutée si nécessaire :", phrase);
 
   const correctionsDiv = document.getElementById("corrections");
   const correctionStatusDiv = document.getElementById("correction-status");
 
-  correctionsDiv.textContent = "Phrase non trouvée dans la base. Vous pouvez l'ajouter.";
-  correctionStatusDiv.textContent = "Phrase non trouvée dans la base. Vous pouvez l'ajouter.";
-  correctionStatusDiv.classList.add("green");
+  // Afficher le même message dans correctionsDiv
+  correctionsDiv.textContent = "Phrase non trouvée dans la base ❌. Vous pouvez l'ajouter.";
 }
