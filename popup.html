@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Statut de la Correction</title>
+  <title>Correction Status</title>
   <style>
     /* Style global */
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      padding: 0;
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      padding: 10px;
       background-color: #f5f5f7;
       display: flex;
       justify-content: center;
@@ -17,77 +17,66 @@
       height: 100vh;
     }
 
-    /* Conteneur du popup */
-    .container {
+    /* Style des divs */
+    div {
+      margin-bottom: 10px;
+    }
+
+    /* Conteneur principal */
+    #result, #correction-status, #errors, #words, #corrections, #debug-info, #api-response {
       background-color: white;
-      width: 300px;
-      padding: 20px;
-      border-radius: 20px;
-    }
-
-    h1 {
-      font-size: 1.6rem;
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    /* Statut de correction */
-    .status-box {
       padding: 15px;
-      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Conteneur de statut de correction */
+    #correction-status {
       text-align: center;
       font-weight: bold;
       color: white;
       border-radius: 12px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 15px;
     }
 
-    .status-box.green {
+    #correction-status.green {
       background-color: #34c759;
     }
 
-    .status-box.red {
+    #correction-status.red {
       background-color: #ff3b30;
     }
 
-    .status-box.yellow {
+    #correction-status.yellow {
       background-color: #ffcc00;
       color: #333;
     }
 
-    /* Section des mots à corriger */
-    .content-box {
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
+    /* Style des sections mots à corriger et corrections */
+    #words, #corrections {
       font-size: 1rem;
       color: #333;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
-    .error-box {
+    /* Section des mots à corriger */
+    #words {
       background-color: #ffe5e5;
       border: 1px solid #ff5c5c;
     }
 
-    .correction-box {
+    /* Section des corrections proposées */
+    #corrections {
       background-color: #d9f7be;
       border: 1px solid #72d5a8;
     }
 
-    /* Title and content styling */
+    /* Titres des sections */
     .title {
       font-weight: bold;
       margin-bottom: 10px;
     }
 
-    .content {
-      font-size: 1rem;
-      margin: 5px 0;
-    }
-
-    /* Button styling */
+    /* Bouton pour actions supplémentaires */
     .button {
       display: inline-block;
       padding: 12px 24px;
@@ -105,31 +94,17 @@
     .button:hover {
       background-color: #0051a8;
     }
+
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <h1>Vérification de la Phrase</h1>
-
-    <!-- Section des mots à corriger -->
-    <div id="words" class="content-box error-box">
-      <div class="title">Mot(s) à corriger :</div>
-      <div class="content">...</div>
-    </div>
-
-    <!-- Section des corrections proposées ou validation -->
-    <div id="corrections" class="content-box correction-box">
-      <div class="title" id="correction-status-title">Statut de la phrase :</div>
-      <div class="content" id="correction-status-content">...</div>
-    </div>
-
-    
-    <!-- Statut de correction -->
-    <div id="correction-status" class="status-box yellow">Chargement...</div>
-
-  </div>
-
+  <div id="result"></div>
+  <div id="correction-status"></div> <!-- Affiche si le popup est actif -->
+  <div id="errors"></div>
+  <div id="words"></div>
+  <div id="corrections"></div> <!-- Affiche soit les corrections -->
+  <div id="debug-info"></div> <!-- Pour afficher les phrases originales et corrigées -->
+  <div id="api-response"></div> <!-- Affiche la réponse de l'API -->
   <script src="popup.js"></script>
 </body>
 </html>
