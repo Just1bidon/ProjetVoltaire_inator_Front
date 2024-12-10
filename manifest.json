@@ -4,6 +4,9 @@
   "version": "1.0",
   "description": "Extension Projet Voltaire",
   "icons": {
+    "16": "icons/normal.png",
+    "32": "icons/normal.png",
+    "48": "icons/normal.png",
     "128": "icons/normal.png"
   },
   "permissions": [
@@ -16,7 +19,12 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "icons/normal.png"
+    "default_icon": {
+      "16": "icons/normal.png",
+      "32": "icons/normal.png",
+      "48": "icons/normal.png",
+      "128": "icons/normal.png"
+    }
   },
   "options_page": "options.html",
   "commands": {
