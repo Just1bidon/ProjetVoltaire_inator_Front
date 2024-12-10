@@ -166,7 +166,7 @@ function checkIfCorrectionExists() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-function highlightElements() {
+function highlightElements(knownStatus = null) {
   const parentDivs = document.querySelectorAll(
     'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
   );
@@ -174,6 +174,17 @@ function highlightElements() {
   let totalOccurrences = 0;
   const elementsInOrder = [];
   const highlightMarkers = [];
+
+  // Déterminer la couleur en fonction du statut connu
+  let highlightColor = "yellow"; // Couleur par défaut quand on ne sait pas
+
+  if (knownStatus !== null) {
+    if (knownStatus === 1) {
+      highlightColor = "red"; // Faute connue
+    } else if (knownStatus === 0) {
+      highlightColor = "green"; // Pas de faute connue
+    }
+  }
 
   parentDivs.forEach((parent) => {
     const childElements = parent.querySelectorAll(".css-146c3p1");
@@ -193,7 +204,7 @@ function highlightElements() {
 
       if (isHighlightMarker) {
         totalOccurrences++;
-        el.style.backgroundColor = "yellow";
+        el.style.backgroundColor = highlightColor;
         highlightMarkers.push(elementsInOrder.length - 1);
       }
     });
@@ -226,7 +237,7 @@ function highlightElements() {
   potentialErrorIndices.forEach((index) => {
     const item = elementsInOrder[index];
     if (item && item.isWord) {
-      item.element.style.backgroundColor = "red";
+      item.element.style.backgroundColor = highlightColor; // Utiliser la même couleur pour les mots
       potentialErrorWords.push(item.text);
     }
   });
@@ -461,9 +472,24 @@ function handleExistingPhrase(data) {
 
   if (data.faute == 1) {
     correctionsDiv.textContent = "Cette phrase CONTIENT une faute connue.";
-    // Vous pouvez ajouter d'autres actions ici, comme mettre en évidence la faute
+    // Rappeler highlightElements avec le statut "faute"
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: highlightElements,
+        args: [1] // 1 pour indiquer une faute
+      });
+    });
   } else {
     correctionsDiv.textContent = "Cette phrase ne contient PAS DE FAUTE.";
+    // Rappeler highlightElements avec le statut "pas de faute"
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: highlightElements,
+        args: [0] // 0 pour indiquer pas de faute
+      });
+    });
   }
 
   correctionsDiv.textContent += `
@@ -480,7 +506,15 @@ function handleExistingPhrase(data) {
 function handleNonExistingPhrase(phrase) {
   console.log("Phrase non trouvée. Prête à être ajoutée si nécessaire :", phrase);
 
-  // Exemple d'affichage dans l'interface
   const correctionsDiv = document.getElementById("corrections");
   correctionsDiv.textContent = "Phrase non trouvée dans la base. Vous pouvez l'ajouter.";
+
+  // Rappeler highlightElements sans paramètre pour utiliser la couleur par défaut
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      func: highlightElements,
+      args: [null] // null pour utiliser la couleur par défaut (jaune)
+    });
+  });
 }
