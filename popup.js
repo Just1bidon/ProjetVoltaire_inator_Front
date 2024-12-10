@@ -176,13 +176,13 @@ function highlightElements(knownStatus = null) {
   const highlightMarkers = [];
 
   // Déterminer la couleur en fonction du statut connu
-  let highlightColor = "yellow"; // Couleur par défaut quand on ne sait pas
+  let highlightColor = "rgba(255, 255, 0, 0.20)"; // Yellow with 0.5 opacity (default)
 
   if (knownStatus !== null) {
     if (knownStatus === 1) {
-      highlightColor = "red"; // Faute connue
+      highlightColor = "rgba(255, 0, 0, 0.20)"; // Red with 0.5 opacity
     } else if (knownStatus === 0) {
-      highlightColor = "green"; // Pas de faute connue
+      highlightColor = "rgba(0, 255, 0, 0.20)"; // Green with 0.5 opacity
     }
   }
 
