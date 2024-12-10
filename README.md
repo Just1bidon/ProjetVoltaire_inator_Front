@@ -26,6 +26,42 @@ Elle est compatible avce tous les **navigateurs chromium**
 6. Ajoutez l'extention en favoris pour qu'elle apparaisse dans la barre des tâches google
 7. L'extension est maintenant installée et prête à être utilisée.
 
+## Mode examen
+
+L'extention possède un mode examen qui permet d'être plus discret pendant son utilisation. Pour l'activer :
+1. Ouvrir les détails de l'extention en cliquant sur le bouton "Détails"
+![Alt text](/img_readme/1.png?raw=true)
+2. Descendre jusqu'à trouver "option d'extention" et cliquer dessus
+![Alt text](/img_readme/2.png?raw=true)
+3. Une nouvelle page s'ouvre, vous pouvez alors cocher ou non le mode Examen
+![Alt text](/img_readme/3.png?raw=true)
+
+### Detail du mode examen
+**Surlignage**
+
+Mode examen ACTIF : opacité des couleurs de surlignages = 1
+
+![Alt text](/img_readme/4.png?raw=true)
+
+Mode examen INACTIF : opacité des couleurs de surlignages = 0.25
+
+![Alt text](/img_readme/5.png?raw=true)
+
+**Popup de l'extention**
+
+Mode examen ACTIF : popup réduit au maximum avec aucune informations dedans
+
+Mode examen INACTIF : popup affiché
+
+**Icon de l'extention**
+Mode examen ACTIF : icon invisible (beta, fonctionne sur brave en mode sombre)
+
+![Alt text](/img_readme/6.png?raw=true)
+![Alt text](/img_readme/7.png?raw=true)
+
+
+
+
 ## Utilisation
 
 1. Accédez à une page (https://apprentissage.appli3.projet-voltaire.fr/entrainement") contenant une phrase à analyser.
