@@ -17,7 +17,7 @@ Elle est compatible avce tous les **navigateurs chromium**
     
 2. Ouvrez **Google Chrome** et accédez à la page des extensions :
     
-    [chrome://extensions/]
+    [chrome://extensions/](chrome://extensions/)
     
 3. Activez le mode développeur (coin supérieur droit de la page).
 4. Cliquez sur **"Charger l’extension non empaquetée"**.

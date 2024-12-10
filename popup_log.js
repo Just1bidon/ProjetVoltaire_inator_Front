@@ -47,20 +47,20 @@ function processHighlighting(tabs, isCorrectionActive = false) {
         const data = highlightResults[0].result;
 
         // Afficher le nombre total d'éléments mis en évidence
-        // document.getElementById("result").textContent =
-        //   "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
+        document.getElementById("result").textContent =
+          "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
 
         // Afficher les indices dans le popup
-        // document.getElementById("errors").textContent =
-        //   data.potentialErrorIndices && data.potentialErrorIndices.length > 0
-        //     ? "Indices concernés : " + data.potentialErrorIndices.join(", ")
-        //     : "Aucun indice concerné.";
+        document.getElementById("errors").textContent =
+          data.potentialErrorIndices && data.potentialErrorIndices.length > 0
+            ? "Indices concernés : " + data.potentialErrorIndices.join(", ")
+            : "Aucun indice concerné.";
 
         // Afficher les mots dans le popup
-        // document.getElementById("words").textContent =
-        //   data.potentialErrorWords && data.potentialErrorWords.length > 0
-        //     ? "Mot(s) à corriger : " + data.potentialErrorWords.join(", ")
-        //     : "Aucun mot concerné.";
+        document.getElementById("words").textContent =
+          data.potentialErrorWords && data.potentialErrorWords.length > 0
+            ? "Mot(s) à corriger : " + data.potentialErrorWords.join(", ")
+            : "Aucun mot concerné.";
 
         // Récupérer les mots corrigés si le pop-up est actif
         if (isCorrectionActive && data.potentialErrorIndices.length > 0) {
@@ -95,11 +95,11 @@ function fetchCorrectedWordsFromIndices(indices, tabs, potentialErrorWords) {
         debugDiv.innerHTML = ""; // Réinitialiser le contenu du débogage
 
         // Afficher les mots corrigés et les phrases
-        // correctedData.correctedWords.forEach((correctedWord, idx) => {
-        //   const correctionText = document.createElement("div");
-        //   correctionText.textContent = `Mot corrigé ${idx + 1}: "${correctedWord}"`;
-        //   correctionsDiv.appendChild(correctionText);
-        // });
+        correctedData.correctedWords.forEach((correctedWord, idx) => {
+          const correctionText = document.createElement("div");
+          correctionText.textContent = `Mot corrigé ${idx + 1}: "${correctedWord}"`;
+          correctionsDiv.appendChild(correctionText);
+        });
 
         // Ajouter les phrases complètes pour vérification
         const originalPhraseDiv = document.createElement("div");
@@ -460,10 +460,10 @@ function handleExistingPhrase(data) {
   const correctionsDiv = document.getElementById("corrections");
 
   if (data.faute == 1) {
-    correctionsDiv.textContent = "Cette phrase CONTIENT une faute connue.";
+    correctionsDiv.textContent = "Attention ! Cette phrase contient une faute connue.";
     // Vous pouvez ajouter d'autres actions ici, comme mettre en évidence la faute
   } else {
-    correctionsDiv.textContent = "Cette phrase ne contient PAS DE FAUTE.";
+    correctionsDiv.textContent = "Cette phrase est connue et ne contient pas de faute.";
   }
 
   correctionsDiv.textContent += `
