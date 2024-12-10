@@ -47,20 +47,20 @@ function processHighlighting(tabs, isCorrectionActive = false) {
         const data = highlightResults[0].result;
 
         // Afficher le nombre total d'éléments mis en évidence
-        document.getElementById("result").textContent =
-          "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
+        // document.getElementById("result").textContent =
+        //   "Nombre total d'éléments mis en évidence : " + data.totalOccurrences;
 
         // Afficher les indices dans le popup
-        document.getElementById("errors").textContent =
-          data.potentialErrorIndices && data.potentialErrorIndices.length > 0
-            ? "Indices concernés : " + data.potentialErrorIndices.join(", ")
-            : "Aucun indice concerné.";
+        // document.getElementById("errors").textContent =
+        //   data.potentialErrorIndices && data.potentialErrorIndices.length > 0
+        //     ? "Indices concernés : " + data.potentialErrorIndices.join(", ")
+        //     : "Aucun indice concerné.";
 
         // Afficher les mots dans le popup
-        document.getElementById("words").textContent =
-          data.potentialErrorWords && data.potentialErrorWords.length > 0
-            ? "Mot(s) à corriger : " + data.potentialErrorWords.join(", ")
-            : "Aucun mot concerné.";
+        // document.getElementById("words").textContent =
+        //   data.potentialErrorWords && data.potentialErrorWords.length > 0
+        //     ? "Mot(s) à corriger : " + data.potentialErrorWords.join(", ")
+        //     : "Aucun mot concerné.";
 
         // Récupérer les mots corrigés si le pop-up est actif
         if (isCorrectionActive && data.potentialErrorIndices.length > 0) {
@@ -95,11 +95,11 @@ function fetchCorrectedWordsFromIndices(indices, tabs, potentialErrorWords) {
         debugDiv.innerHTML = ""; // Réinitialiser le contenu du débogage
 
         // Afficher les mots corrigés et les phrases
-        correctedData.correctedWords.forEach((correctedWord, idx) => {
-          const correctionText = document.createElement("div");
-          correctionText.textContent = `Mot corrigé ${idx + 1}: "${correctedWord}"`;
-          correctionsDiv.appendChild(correctionText);
-        });
+        // correctedData.correctedWords.forEach((correctedWord, idx) => {
+        //   const correctionText = document.createElement("div");
+        //   correctionText.textContent = `Mot corrigé ${idx + 1}: "${correctedWord}"`;
+        //   correctionsDiv.appendChild(correctionText);
+        // });
 
         // Ajouter les phrases complètes pour vérification
         const originalPhraseDiv = document.createElement("div");
@@ -166,7 +166,7 @@ function checkIfCorrectionExists() {
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
-function highlightElements() {
+function highlightElements(knownStatus = null) {
   const parentDivs = document.querySelectorAll(
     'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
   );
@@ -174,6 +174,17 @@ function highlightElements() {
   let totalOccurrences = 0;
   const elementsInOrder = [];
   const highlightMarkers = [];
+
+  // Déterminer la couleur en fonction du statut connu
+  let highlightColor = "rgba(255, 255, 0, 0.20)"; // Yellow with 0.5 opacity (default)
+
+  if (knownStatus !== null) {
+    if (knownStatus === 1) {
+      highlightColor = "rgba(255, 0, 0, 0.20)"; // Red with 0.5 opacity
+    } else if (knownStatus === 0) {
+      highlightColor = "rgba(0, 255, 0, 0.20)"; // Green with 0.5 opacity
+    }
+  }
 
   parentDivs.forEach((parent) => {
     const childElements = parent.querySelectorAll(".css-146c3p1");
@@ -193,7 +204,7 @@ function highlightElements() {
 
       if (isHighlightMarker) {
         totalOccurrences++;
-        el.style.backgroundColor = "yellow";
+        el.style.backgroundColor = highlightColor;
         highlightMarkers.push(elementsInOrder.length - 1);
       }
     });
@@ -226,7 +237,7 @@ function highlightElements() {
   potentialErrorIndices.forEach((index) => {
     const item = elementsInOrder[index];
     if (item && item.isWord) {
-      item.element.style.backgroundColor = "red";
+      item.element.style.backgroundColor = highlightColor; // Utiliser la même couleur pour les mots
       potentialErrorWords.push(item.text);
     }
   });
@@ -460,10 +471,25 @@ function handleExistingPhrase(data) {
   const correctionsDiv = document.getElementById("corrections");
 
   if (data.faute == 1) {
-    correctionsDiv.textContent = "Attention ! Cette phrase contient une faute connue.";
-    // Vous pouvez ajouter d'autres actions ici, comme mettre en évidence la faute
+    correctionsDiv.textContent = "Cette phrase CONTIENT une faute connue.";
+    // Rappeler highlightElements avec le statut "faute"
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: highlightElements,
+        args: [1] // 1 pour indiquer une faute
+      });
+    });
   } else {
-    correctionsDiv.textContent = "Cette phrase est connue et ne contient pas de faute.";
+    correctionsDiv.textContent = "Cette phrase ne contient PAS DE FAUTE.";
+    // Rappeler highlightElements avec le statut "pas de faute"
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: highlightElements,
+        args: [0] // 0 pour indiquer pas de faute
+      });
+    });
   }
 
   correctionsDiv.textContent += `
@@ -480,7 +506,15 @@ function handleExistingPhrase(data) {
 function handleNonExistingPhrase(phrase) {
   console.log("Phrase non trouvée. Prête à être ajoutée si nécessaire :", phrase);
 
-  // Exemple d'affichage dans l'interface
   const correctionsDiv = document.getElementById("corrections");
   correctionsDiv.textContent = "Phrase non trouvée dans la base. Vous pouvez l'ajouter.";
+
+  // Rappeler highlightElements sans paramètre pour utiliser la couleur par défaut
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      func: highlightElements,
+      args: [null] // null pour utiliser la couleur par défaut (jaune)
+    });
+  });
 }
