@@ -1,31 +1,48 @@
 document.addEventListener("DOMContentLoaded", function () {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.scripting.executeScript(
-      {
-        target: { tabId: tabs[0].id },
-        func: checkIfCorrectionExists,
-      },
-      function (results) {
-        const result = results && results[0] && results[0].result;
-        const correctionsDiv = document.getElementById("corrections");
+  chrome.storage.sync.get({ examMode: false }, function(items) {
+    if (items.examMode) {
+      // En mode examen, rendre le popup minuscule
+      document.body.style.width = '1px';
+      document.body.style.height = '1px';
+      document.body.style.padding = '0';
+      document.body.style.margin = '0';
+      document.body.style.overflow = 'hidden';
+      
+      // Cacher tous les éléments du popup
+      document.querySelectorAll('body > div').forEach(div => {
+        div.style.display = 'none';
+      });
+    }
+    
+    // Continuer avec le code existant
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tabs[0].id },
+          func: checkIfCorrectionExists,
+        },
+        function (results) {
+          const result = results && results[0] && results[0].result;
+          const correctionsDiv = document.getElementById("corrections");
 
-        if (result && result.originalPhrase) {
-          // Vérifier si la phrase existe déjà dans la base
-          checkPhraseInDatabase(result.originalPhrase);
-        }
+          if (result && result.originalPhrase) {
+            // Vérifier si la phrase existe déjà dans la base
+            checkPhraseInDatabase(result.originalPhrase);
+          }
 
-        if (!result || !result.isActive) {
-          correctionsDiv.textContent = "Le pop-up de correction n'est pas actif.";
-          processHighlighting(tabs, false);
-        } else if (result.hasCorrection) {
-          correctionsDiv.textContent = "Une correction a été détectée.";
-          processHighlighting(tabs, true);
-        } else {
-          correctionsDiv.textContent = "Il n'y avait pas de faute.";
-          sendPhraseToAPI(result.originalPhrase, 0, null, null);
+          if (!result || !result.isActive) {
+            correctionsDiv.textContent = "Le pop-up de correction n'est pas actif.";
+            processHighlighting(tabs, false);
+          } else if (result.hasCorrection) {
+            correctionsDiv.textContent = "Une correction a été détectée.";
+            processHighlighting(tabs, true);
+          } else {
+            correctionsDiv.textContent = "Il n'y avait pas de faute.";
+            sendPhraseToAPI(result.originalPhrase, 0, null, null);
+          }
         }
-      }
-    );
+      );
+    });
   });
 });
 
@@ -167,89 +184,95 @@ function checkIfCorrectionExists() {
 // --------------------------------------------------------------------------------------------------------------------------------------------
 
 function highlightElements(knownStatus = null) {
-  const parentDivs = document.querySelectorAll(
-    'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
-  );
+  // Vérifier d'abord si on est en mode examen
+  chrome.storage.sync.get({ examMode: false }, function(items) {
+    const opacity = items.examMode ? 0.25 : 1; // 0.25 en mode examen, 1 sinon
+    
+    const parentDivs = document.querySelectorAll(
+      'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
+    );
 
-  let totalOccurrences = 0;
-  const elementsInOrder = [];
-  const highlightMarkers = [];
+    let totalOccurrences = 0;
+    const elementsInOrder = [];
+    const highlightMarkers = [];
 
-  // Déterminer la couleur en fonction du statut connu
-  let highlightColor = "rgba(255, 255, 0, 0.20)"; // Yellow with 0.5 opacity (default)
-
-  if (knownStatus !== null) {
-    if (knownStatus === 1) {
-      highlightColor = "rgba(255, 0, 0, 0.20)"; // Red with 0.5 opacity
-    } else if (knownStatus === 0) {
-      highlightColor = "rgba(0, 255, 0, 0.20)"; // Green with 0.5 opacity
-    }
-  }
-
-  parentDivs.forEach((parent) => {
-    const childElements = parent.querySelectorAll(".css-146c3p1");
-
-    childElements.forEach((el) => {
-      const textContent = el.textContent.trim();
-      const isWordElement = el.classList.contains("r-184en5c");
-      const isHighlightMarker =
-        el.classList.contains("r-lrvibr") && !isWordElement;
-
-      elementsInOrder.push({
-        text: textContent,
-        element: el,
-        isWord: isWordElement,
-        isHighlightMarker,
-      });
-
-      if (isHighlightMarker) {
-        totalOccurrences++;
-        el.style.backgroundColor = highlightColor;
-        highlightMarkers.push(elementsInOrder.length - 1);
-      }
-    });
-  });
-
-  const potentialErrorIndices = [];
-
-  if (highlightMarkers.length === 2) {
-    const startIndex = highlightMarkers[0];
-    const endIndex = highlightMarkers[1];
-    for (let i = startIndex + 1; i < endIndex; i++) {
-      potentialErrorIndices.push(i);
-    }
-  } else if (highlightMarkers.length === 1) {
-    const markerIndex = highlightMarkers[0];
-    const totalElements = elementsInOrder.length;
-
-    if (markerIndex <= Math.floor(totalElements / 2)) {
-      for (let i = 0; i < markerIndex; i++) {
-        potentialErrorIndices.push(i);
+    // Déterminer la couleur en fonction du statut connu
+    let highlightColor;
+    if (knownStatus !== null) {
+      if (knownStatus === 1) {
+        highlightColor = `rgba(255, 0, 0, ${opacity})`; // Rouge avec opacité variable
+      } else if (knownStatus === 0) {
+        highlightColor = `rgba(0, 255, 0, ${opacity})`; // Vert avec opacité variable
       }
     } else {
-      for (let i = markerIndex + 1; i < totalElements; i++) {
+      highlightColor = `rgba(255, 255, 0, ${opacity})`; // Jaune avec opacité variable
+    }
+
+    parentDivs.forEach((parent) => {
+      const childElements = parent.querySelectorAll(".css-146c3p1");
+
+      childElements.forEach((el) => {
+        const textContent = el.textContent.trim();
+        const isWordElement = el.classList.contains("r-184en5c");
+        const isHighlightMarker =
+          el.classList.contains("r-lrvibr") && !isWordElement;
+
+        elementsInOrder.push({
+          text: textContent,
+          element: el,
+          isWord: isWordElement,
+          isHighlightMarker,
+        });
+
+        if (isHighlightMarker) {
+          totalOccurrences++;
+          el.style.backgroundColor = highlightColor;
+          highlightMarkers.push(elementsInOrder.length - 1);
+        }
+      });
+    });
+
+    const potentialErrorIndices = [];
+
+    if (highlightMarkers.length === 2) {
+      const startIndex = highlightMarkers[0];
+      const endIndex = highlightMarkers[1];
+      for (let i = startIndex + 1; i < endIndex; i++) {
         potentialErrorIndices.push(i);
       }
-    }
-  }
+    } else if (highlightMarkers.length === 1) {
+      const markerIndex = highlightMarkers[0];
+      const totalElements = elementsInOrder.length;
 
-  const potentialErrorWords = [];
-  potentialErrorIndices.forEach((index) => {
-    const item = elementsInOrder[index];
-    if (item && item.isWord) {
-      item.element.style.backgroundColor = highlightColor; // Utiliser la même couleur pour les mots
-      potentialErrorWords.push(item.text);
+      if (markerIndex <= Math.floor(totalElements / 2)) {
+        for (let i = 0; i < markerIndex; i++) {
+          potentialErrorIndices.push(i);
+        }
+      } else {
+        for (let i = markerIndex + 1; i < totalElements; i++) {
+          potentialErrorIndices.push(i);
+        }
+      }
     }
+
+    const potentialErrorWords = [];
+    potentialErrorIndices.forEach((index) => {
+      const item = elementsInOrder[index];
+      if (item && item.isWord) {
+        item.element.style.backgroundColor = highlightColor; // Utiliser la même couleur pour les mots
+        potentialErrorWords.push(item.text);
+      }
+    });
+
+    const originalPhrase = elementsInOrder.map((item) => item.text).join(" ");
+
+    return {
+      totalOccurrences,
+      potentialErrorIndices,
+      potentialErrorWords,
+      originalPhrase,
+    };
   });
-
-  const originalPhrase = elementsInOrder.map((item) => item.text).join(" ");
-
-  return {
-    totalOccurrences,
-    potentialErrorIndices,
-    potentialErrorWords,
-    originalPhrase,
-  };
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
