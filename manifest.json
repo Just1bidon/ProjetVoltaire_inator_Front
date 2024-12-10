@@ -3,6 +3,9 @@
   "name": "Analyse des mots",
   "version": "1.0",
   "description": "Extension Projet Voltaire",
+  "icons": {
+    "128": "icons/normal.png"
+  },
   "permissions": [
     "activeTab", 
     "scripting",
@@ -12,7 +15,8 @@
     "https://apprentissage.appli3.projet-voltaire.fr/entrainement/*"
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "icons/normal.png"
   },
   "options_page": "options.html",
   "commands": {
