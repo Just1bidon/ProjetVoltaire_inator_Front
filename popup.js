@@ -186,7 +186,7 @@ function checkIfCorrectionExists() {
 function highlightElements(knownStatus = null) {
   // Vérifier d'abord si on est en mode examen
   chrome.storage.sync.get({ examMode: false }, function(items) {
-    const opacity = items.examMode ? 0.25 : 1; // 0.25 en mode examen, 1 sinon
+    const opacity = items.examMode ? 0.10 : 1; // 0.1 en mode examen, 1 sinon
     
     const parentDivs = document.querySelectorAll(
       'div.css-175oi2r.r-18u37iz.r-1w6e6rj.r-1h0z5md.r-1peese0.r-1wzrnnt.r-3pj75a.r-13qz1uu'
