@@ -15,7 +15,8 @@
     "storage"
   ],
   "host_permissions": [
-    "https://apprentissage.appli3.projet-voltaire.fr/entrainement/*"
+    "https://apprentissage.appli3.projet-voltaire.fr/entrainement/*",
+    "https://apprentissage.appli3.projet-voltaire.fr/evaluation"
   ],
   "action": {
     "default_popup": "popup.html",
